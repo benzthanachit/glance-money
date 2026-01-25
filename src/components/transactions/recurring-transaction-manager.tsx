@@ -19,6 +19,7 @@ import {
   Eye,
   AlertTriangle
 } from 'lucide-react'
+import { categoryService } from '@/lib/services/categoryService'
 import { toast } from 'sonner'
 
 interface RecurringTransactionWithStatus extends Transaction {
@@ -148,16 +149,12 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
     setShowInstances(true)
   }
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      'Food': '🍽️',
-      'Transport': '🚗',
-      'Fixed Cost': '🏠',
-      'DCA': '📈',
-      'Salary': '💰',
-      'Freelance': '💼',
-    }
-    return icons[category] || '💳'
+  const getCategoryIcon = (categoryId: string) => {
+    return categoryService.getCategoryIcon(categoryId)
+  }
+
+  const getCategoryName = (categoryId: string) => {
+    return categoryService.getCategoryName(categoryId)
   }
 
   // Don't render until component is mounted to prevent hydration issues
@@ -237,7 +234,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{getCategoryIcon(transaction.category)}</span>
                     <div>
-                      <CardTitle className="text-lg">{transaction.category}</CardTitle>
+                      <CardTitle className="text-lg">{getCategoryName(transaction.category)}</CardTitle>
                       <CardDescription>{transaction.description || 'No description'}</CardDescription>
                     </div>
                   </div>
@@ -328,7 +325,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Generated Instances: {selectedTransaction?.category}
+              Generated Instances: {selectedTransaction ? getCategoryName(selectedTransaction.category) : ''}
             </DialogTitle>
             <DialogDescription>
               All transactions generated from this recurring template

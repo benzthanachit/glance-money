@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/lib/auth/context'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { NetStatusCard, LazySummaryCards, LazyExpenseChart } from '@/components/dashboard'
 import { ResponsiveLayout } from '@/components/layout'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
@@ -13,6 +14,7 @@ import { useLanguage } from '@/lib/contexts/language-context'
 import { useResponsive } from '@/lib/hooks/useResponsive'
 import { usePerformanceMonitor, useWebVitals } from '@/lib/hooks/usePerformanceMonitor'
 import { preloadCriticalComponents } from '@/lib/utils/code-splitting'
+import { categoryService } from '@/lib/services/categoryService'
 import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
 
@@ -38,6 +40,21 @@ export default function DashboardPage() {
     preloadCriticalComponents()
   }, [])
 
+  // Load categories on mount to populate categoryService cache
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        await categoryService.getCategories()
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      }
+    }
+    
+    if (user) {
+      loadCategories()
+    }
+  }, [user])
+
   // Log real-time connection status for debugging
   useEffect(() => {
     console.log('Real-time connection status:', { isConnected, realtimeError })
@@ -59,10 +76,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <ResponsiveLayout 
-      currentPage="home" 
-      onAddTransaction={handleAddTransaction}
-    >
+    <ProtectedRoute>
+      <ResponsiveLayout 
+        currentPage="home" 
+        onAddTransaction={handleAddTransaction}
+      >
       {/* Header Section */}
       <div className="mb-6 md:mb-8">
         <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-start md:space-y-0">
@@ -171,5 +189,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </ResponsiveLayout>
+    </ProtectedRoute>
   )
 }

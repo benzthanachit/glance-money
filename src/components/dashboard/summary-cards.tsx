@@ -28,14 +28,15 @@ interface SummaryCardsProps {
   className?: string;
 }
 
-const getCategoryIcon = (category: string) => {
+const getCategoryIcon = (categoryId: string) => {
   // First try to get from category service
-  const serviceIcon = categoryService.getCategoryIcon(category);
+  const serviceIcon = categoryService.getCategoryIcon(categoryId);
   if (serviceIcon !== '📝') {
     return <span className="text-lg">{serviceIcon}</span>;
   }
   
   // Fallback to Lucide icons for better visual consistency
+  const categoryName = categoryService.getCategoryName(categoryId);
   const iconMap: Record<string, React.ReactNode> = {
     'Food': <Utensils className="h-5 w-5" />,
     'Transport': <Car className="h-5 w-5" />,
@@ -43,10 +44,11 @@ const getCategoryIcon = (category: string) => {
     'DCA': <TrendingUpIcon className="h-5 w-5" />,
   };
   
-  return iconMap[category] || <PieChart className="h-5 w-5" />;
+  return iconMap[categoryName] || <PieChart className="h-5 w-5" />;
 };
 
-const getCategoryColor = (category: string) => {
+const getCategoryColor = (categoryId: string) => {
+  const categoryName = categoryService.getCategoryName(categoryId);
   const colorMap: Record<string, string> = {
     'Food': 'text-orange-600 dark:text-orange-400',
     'Transport': 'text-blue-600 dark:text-blue-400',
@@ -54,7 +56,7 @@ const getCategoryColor = (category: string) => {
     'DCA': 'text-green-600 dark:text-green-400',
   };
   
-  return colorMap[category] || 'text-gray-600 dark:text-gray-400';
+  return colorMap[categoryName] || 'text-gray-600 dark:text-gray-400';
 };
 
 export function SummaryCards({
@@ -208,7 +210,7 @@ export function SummaryCards({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">
-                          {category.category}
+                          {categoryService.getCategoryName(category.category)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {category.transactionCount} {locale === 'th' ? 'รายการ' : 'transactions'}
@@ -236,7 +238,7 @@ export function SummaryCards({
                 {categoryBreakdown.map((category) => (
                   <div key={`${category.category}-bar`} className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{category.category}</span>
+                      <span className="text-muted-foreground">{categoryService.getCategoryName(category.category)}</span>
                       <span className="text-muted-foreground">{category.percentage.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">

@@ -4,6 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategorySummary } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { categoryService } from '@/lib/services/categoryService';
 import { BarChart3, PieChart, TrendingUp } from 'lucide-react';
 
 interface ExpenseChartProps {
@@ -14,7 +15,8 @@ interface ExpenseChartProps {
   className?: string;
 }
 
-const getCategoryColor = (category: string, opacity: number = 1) => {
+const getCategoryColor = (categoryId: string, opacity: number = 1) => {
+  const categoryName = categoryService.getCategoryName(categoryId);
   const colorMap: Record<string, string> = {
     'Food': `rgba(234, 88, 12, ${opacity})`, // orange-600
     'Transport': `rgba(37, 99, 235, ${opacity})`, // blue-600
@@ -22,7 +24,7 @@ const getCategoryColor = (category: string, opacity: number = 1) => {
     'DCA': `rgba(34, 197, 94, ${opacity})`, // green-600
   };
   
-  return colorMap[category] || `rgba(107, 114, 128, ${opacity})`; // gray-500
+  return colorMap[categoryName] || `rgba(107, 114, 128, ${opacity})`; // gray-500
 };
 
 export function ExpenseChart({
@@ -171,7 +173,7 @@ export function ExpenseChart({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-foreground truncate">
-                    {category.category}
+                    {categoryService.getCategoryName(category.category)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {category.percentage.toFixed(1)}%
@@ -189,7 +191,7 @@ export function ExpenseChart({
             {categoryBreakdown.map((category) => (
               <div key={`bar-${category.category}`} className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-foreground font-medium">{category.category}</span>
+                  <span className="text-foreground font-medium">{categoryService.getCategoryName(category.category)}</span>
                   <span className="text-muted-foreground">{category.percentage.toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">

@@ -6,6 +6,7 @@ export interface CategoryFilters {
 
 class CategoryService {
   private baseUrl = '/api/categories'
+  private categoriesCache: Category[] | null = null
 
   async getCategories(filters?: CategoryFilters): Promise<Category[]> {
     const params = new URLSearchParams()
@@ -27,6 +28,7 @@ class CategoryService {
     }
 
     const data = await response.json()
+    this.categoriesCache = data.categories
     return data.categories
   }
 
@@ -86,7 +88,7 @@ class CategoryService {
 
   // Get categories filtered by type
   getCategoriesByType(type: 'income' | 'expense' | 'both'): Category[] {
-    const categories = this.getDefaultCategories()
+    const categories = this.categoriesCache || this.getDefaultCategories()
     
     if (type === 'both') {
       return categories
@@ -95,21 +97,43 @@ class CategoryService {
     return categories.filter(category => category.type === type || category.type === 'both')
   }
 
-  // Get category by ID
+  // Get category by ID - try cache first, then default
   getCategoryById(id: string): Category | undefined {
-    return this.getDefaultCategories().find(category => category.id === id)
+    const categories = this.categoriesCache || this.getDefaultCategories()
+    return categories.find(category => category.id === id)
   }
 
-  // Get category icon by ID
-  getCategoryIcon(id: string): string {
-    const category = this.getCategoryById(id)
+  // Get category by name - for backward compatibility
+  getCategoryByName(name: string): Category | undefined {
+    const categories = this.categoriesCache || this.getDefaultCategories()
+    return categories.find(category => category.name === name)
+  }
+
+  // Get category icon by name
+  getCategoryIcon(categoryName: string): string {
+    let category = this.getCategoryByName(categoryName)
+    if (!category) {
+      category = this.getCategoryById(categoryName) // fallback for ID
+    }
     return category?.icon || '📝'
   }
 
-  // Get category name by ID
-  getCategoryName(id: string): string {
-    const category = this.getCategoryById(id)
-    return category?.name || id
+  // Get category name - if input is already a name, return as-is
+  getCategoryName(categoryName: string): string {
+    // If it's already a valid category name, return it
+    let category = this.getCategoryByName(categoryName)
+    if (category) {
+      return category.name
+    }
+    
+    // Try to find by ID (fallback)
+    category = this.getCategoryById(categoryName)
+    if (category) {
+      return category.name
+    }
+    
+    // If not found, return the input as-is (might be a custom category name)
+    return categoryName
   }
 }
 

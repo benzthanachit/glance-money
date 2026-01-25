@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { ResponsiveLayout } from '@/components/layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,8 @@ export default function TransactionsPage() {
   }
 
   return (
-    <ResponsiveLayout currentPage="transactions">
+    <ProtectedRoute>
+      <ResponsiveLayout currentPage="transactions">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
@@ -147,5 +149,6 @@ export default function TransactionsPage() {
         </DialogContent>
       </Dialog>
     </ResponsiveLayout>
+    </ProtectedRoute>
   )
 }

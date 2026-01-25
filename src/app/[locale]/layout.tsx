@@ -12,15 +12,21 @@ import { locales, Locale } from '@/i18n/config';
 import { Toaster } from "@/components/ui/sonner";
 import OfflineToast from "@/components/ui/offline-toast";
 import ServiceWorkerRegistration from "@/components/ui/service-worker-registration";
+import PWAInstallPrompt from "@/components/ui/pwa-install-prompt";
+import { PerformanceOptimizer, CriticalResources } from "@/components/ui/performance-optimizer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap", // Optimize font loading
+  preload: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap", // Optimize font loading
+  preload: false, // Only preload if needed
 });
 
 export const metadata: Metadata = {
@@ -63,23 +69,41 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        {/* PWA meta tags */}
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icon-192x192.png" />
+        <meta name="theme-color" content="#10b981" />
+        
+        {/* Performance optimizations */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextIntlClientProvider messages={messages}>
-          <LanguageProvider initialLocale={locale as Locale}>
-            <CurrencyProvider>
-              <ThemeProvider>
-                <AuthProvider>
-                  {children}
-                  <Toaster />
-                  <OfflineToast />
-                  <ServiceWorkerRegistration />
-                </AuthProvider>
-              </ThemeProvider>
-            </CurrencyProvider>
-          </LanguageProvider>
-        </NextIntlClientProvider>
+        <PerformanceOptimizer>
+          <CriticalResources 
+            images={["/icon-192x192.png", "/icon-512x512.png"]}
+          />
+          <NextIntlClientProvider messages={messages}>
+            <LanguageProvider initialLocale={locale as Locale}>
+              <CurrencyProvider>
+                <ThemeProvider>
+                  <AuthProvider>
+                    {children}
+                    <Toaster />
+                    <OfflineToast />
+                    <ServiceWorkerRegistration />
+                    <PWAInstallPrompt />
+                  </AuthProvider>
+                </ThemeProvider>
+              </CurrencyProvider>
+            </LanguageProvider>
+          </NextIntlClientProvider>
+        </PerformanceOptimizer>
       </body>
     </html>
   );
