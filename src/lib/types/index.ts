@@ -109,3 +109,10 @@ export interface TransactionData {
   date: Date;
   isRecurring: boolean;
 }
+
+export interface TransactionListProps {
+  transactions: Transaction[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  groupBy?: 'date' | 'category';
+}
