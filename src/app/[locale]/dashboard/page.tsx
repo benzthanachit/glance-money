@@ -3,10 +3,15 @@
 import { useAuth } from '@/lib/auth/context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ResponsiveLayout } from '@/components/layout'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const t = useTranslations('dashboard')
+  const tCommon = useTranslations('common')
+  const tNav = useTranslations('navigation')
   const [fabClickCount, setFabClickCount] = useState(0)
 
   const handleAddTransaction = () => {
@@ -21,14 +26,21 @@ export default function DashboardPage() {
       onAddTransaction={handleAddTransaction}
     >
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {user?.email}</p>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
+            <p className="text-muted-foreground">Welcome back, {user?.email}</p>
+          </div>
+          <div className="w-48">
+            <LanguageSwitcher />
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Net Status</CardTitle>
+            <CardTitle>{t('netStatus')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">฿0.00</p>
@@ -38,7 +50,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Transactions</CardTitle>
+            <CardTitle>{tNav('transactions')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">0</p>
@@ -48,7 +60,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Goals</CardTitle>
+            <CardTitle>{tNav('goals')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">0</p>

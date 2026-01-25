@@ -1,0 +1,75 @@
+{
+  "navigation": {
+    "home": "หน้าหลัก",
+    "transactions": "รายการ",
+    "goals": "เป้าหมาย",
+    "settings": "ตั้งค่า"
+  },
+  "dashboard": {
+    "title": "ภาพรวมการเงิน",
+    "netStatus": "สถานะการเงิน",
+    "income": "รายได้",
+    "expenses": "รายจ่าย",
+    "balance": "ยอดคงเหลือ"
+  },
+  "transactions": {
+    "title": "รายการเงินเข้า-ออก",
+    "addTransaction": "เพิ่มรายการ",
+    "income": "รายได้",
+    "expense": "รายจ่าย",
+    "amount": "จำนวนเงิน",
+    "category": "หมวดหมู่",
+    "description": "รายละเอียด",
+    "date": "วันที่",
+    "recurring": "รายการประจำ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "confirmDelete": "คุณแน่ใจหรือไม่ที่จะลบรายการนี้?"
+  },
+  "categories": {
+    "food": "อาหาร",
+    "transport": "การเดินทาง",
+    "fixedCost": "ค่าใช้จ่ายคงที่",
+    "dca": "การลงทุนสม่ำเสมอ"
+  },
+  "goals": {
+    "title": "เป้าหมายการเงิน",
+    "addGoal": "เพิ่มเป้าหมาย",
+    "goalName": "ชื่อเป้าหมาย",
+    "targetAmount": "จำนวนเงินเป้าหมาย",
+    "currentAmount": "จำนวนเงินปัจจุบัน",
+    "deadline": "กำหนดเวลา",
+    "progress": "ความคืบหน้า"
+  },
+  "settings": {
+    "title": "ตั้งค่า",
+    "language": "ภาษา",
+    "currency": "สกุลเงิน",
+    "theme": "ธีม",
+    "exportData": "ส่งออกข้อมูล",
+    "importData": "นำเข้าข้อมูล"
+  },
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "add": "เพิ่ม",
+    "close": "ปิด"
+  },
+  "currency": {
+    "thb": "บาท",
+    "usd": "ดอลลาร์",
+    "eur": "ยูโร"
+  },
+  "dateFormat": {
+    "short": "dd/MM/yyyy",
+    "long": "dd MMMM yyyy"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "navigation": {
+    "home": "Home",
+    "transactions": "Transactions",
+    "goals": "Goals",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Financial Overview",
+    "netStatus": "Net Status",
+    "income": "Income",
+    "expenses": "Expenses",
+    "balance": "Balance"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "addTransaction": "Add Transaction",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "description": "Description",
+    "date": "Date",
+    "recurring": "Recurring",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this transaction?"
+  },
+  "categories": {
+    "food": "Food",
+    "transport": "Transport",
+    "fixedCost": "Fixed Cost",
+    "dca": "DCA Investment"
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "addGoal": "Add Goal",
+    "goalName": "Goal Name",
+    "targetAmount": "Target Amount",
+    "currentAmount": "Current Amount",
+    "deadline": "Deadline",
+    "progress": "Progress"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "currency": "Currency",
+    "theme": "Theme",
+    "exportData": "Export Data",
+    "importData": "Import Data"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "close": "Close"
+  },
+  "currency": {
+    "thb": "Baht",
+    "usd": "Dollar",
+    "eur": "Euro"
+  },
+  "dateFormat": {
+    "short": "MM/dd/yyyy",
+    "long": "MMMM dd, yyyy"
+  }
+}
