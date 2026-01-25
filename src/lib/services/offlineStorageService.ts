@@ -5,7 +5,7 @@ interface OfflineTransaction extends CreateTransactionData {
   id: string
   offline_id: string
   created_at: string
-  synced: boolean
+  synced: number // 0 for false, 1 for true
   action: 'create' | 'update' | 'delete'
   original_id?: string // For updates and deletes
 }
@@ -15,14 +15,14 @@ interface OfflineUpdate {
   transaction_id: string
   update_data: UpdateTransactionData
   created_at: string
-  synced: boolean
+  synced: number // 0 for false, 1 for true
 }
 
 interface OfflineDelete {
   id: string
   transaction_id: string
   created_at: string
-  synced: boolean
+  synced: number // 0 for false, 1 for true
 }
 
 class OfflineStorageService {
@@ -96,7 +96,7 @@ class OfflineStorageService {
       id: offlineId,
       offline_id: offlineId,
       created_at: new Date().toISOString(),
-      synced: false,
+      synced: 0, // 0 for false
       action: 'create'
     }
 
@@ -119,7 +119,7 @@ class OfflineStorageService {
       transaction_id: transactionId,
       update_data: updateData,
       created_at: new Date().toISOString(),
-      synced: false
+      synced: 0 // 0 for false
     }
 
     return new Promise((resolve, reject) => {
@@ -140,7 +140,7 @@ class OfflineStorageService {
       id: deleteId,
       transaction_id: transactionId,
       created_at: new Date().toISOString(),
-      synced: false
+      synced: 0 // 0 for false
     }
 
     return new Promise((resolve, reject) => {
@@ -207,7 +207,7 @@ class OfflineStorageService {
       const transaction = db.transaction(['offline_transactions'], 'readonly')
       const store = transaction.objectStore('offline_transactions')
       const index = store.index('synced')
-      const request = index.getAll(IDBKeyRange.only(false))
+      const request = index.getAll(IDBKeyRange.only(0)) // Use 0 for false, 1 for true
 
       request.onsuccess = () => resolve(request.result || [])
       request.onerror = () => reject(request.error)
@@ -221,7 +221,7 @@ class OfflineStorageService {
       const transaction = db.transaction(['offline_updates'], 'readonly')
       const store = transaction.objectStore('offline_updates')
       const index = store.index('synced')
-      const request = index.getAll(IDBKeyRange.only(false))
+      const request = index.getAll(IDBKeyRange.only(0)) // Use 0 for false, 1 for true
 
       request.onsuccess = () => resolve(request.result || [])
       request.onerror = () => reject(request.error)
@@ -235,7 +235,7 @@ class OfflineStorageService {
       const transaction = db.transaction(['offline_deletes'], 'readonly')
       const store = transaction.objectStore('offline_deletes')
       const index = store.index('synced')
-      const request = index.getAll(IDBKeyRange.only(false))
+      const request = index.getAll(IDBKeyRange.only(0)) // Use 0 for false, 1 for true
 
       request.onsuccess = () => resolve(request.result || [])
       request.onerror = () => reject(request.error)
@@ -254,7 +254,7 @@ class OfflineStorageService {
       getRequest.onsuccess = () => {
         const record = getRequest.result
         if (record) {
-          record.synced = true
+          record.synced = 1 // 1 for true
           const putRequest = store.put(record)
           putRequest.onsuccess = () => resolve()
           putRequest.onerror = () => reject(putRequest.error)
@@ -277,7 +277,7 @@ class OfflineStorageService {
       getRequest.onsuccess = () => {
         const record = getRequest.result
         if (record) {
-          record.synced = true
+          record.synced = 1 // 1 for true
           const putRequest = store.put(record)
           putRequest.onsuccess = () => resolve()
           putRequest.onerror = () => reject(putRequest.error)
@@ -300,7 +300,7 @@ class OfflineStorageService {
       getRequest.onsuccess = () => {
         const record = getRequest.result
         if (record) {
-          record.synced = true
+          record.synced = 1 // 1 for true
           const putRequest = store.put(record)
           putRequest.onsuccess = () => resolve()
           putRequest.onerror = () => reject(putRequest.error)
@@ -356,7 +356,7 @@ class OfflineStorageService {
       // Clean offline transactions
       const transactionStore = transaction.objectStore('offline_transactions')
       const transactionIndex = transactionStore.index('synced')
-      const transactionRequest = transactionIndex.openCursor(IDBKeyRange.only(true))
+      const transactionRequest = transactionIndex.openCursor(IDBKeyRange.only(1)) // 1 for true
       transactionRequest.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result
         if (cursor) {
@@ -371,7 +371,7 @@ class OfflineStorageService {
       // Clean offline updates
       const updateStore = transaction.objectStore('offline_updates')
       const updateIndex = updateStore.index('synced')
-      const updateRequest = updateIndex.openCursor(IDBKeyRange.only(true))
+      const updateRequest = updateIndex.openCursor(IDBKeyRange.only(1)) // 1 for true
       updateRequest.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result
         if (cursor) {
@@ -386,7 +386,7 @@ class OfflineStorageService {
       // Clean offline deletes
       const deleteStore = transaction.objectStore('offline_deletes')
       const deleteIndex = deleteStore.index('synced')
-      const deleteRequest = deleteIndex.openCursor(IDBKeyRange.only(true))
+      const deleteRequest = deleteIndex.openCursor(IDBKeyRange.only(1)) // 1 for true
       deleteRequest.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result
         if (cursor) {

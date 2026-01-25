@@ -4,6 +4,7 @@ import React from 'react';
 import { useLocale } from '@/lib/contexts/language-context';
 import { formatCurrency, Currency } from '@/lib/utils/formatting';
 import { Locale } from '@/i18n/config';
+import { ClientOnly } from './client-only';
 
 interface CurrencyFormatterProps {
   amount: number;
@@ -29,6 +30,28 @@ export function CurrencyFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
+  return (
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <CurrencyFormatterInner
+        amount={amount}
+        currency={currency}
+        locale={locale}
+        className={className}
+        showSymbol={showSymbol}
+        showSign={showSign}
+      />
+    </ClientOnly>
+  );
+}
+
+function CurrencyFormatterInner({ 
+  amount, 
+  currency = 'THB', 
+  locale,
+  className = '',
+  showSymbol = true,
+  showSign = false
+}: CurrencyFormatterProps & { locale: Locale }) {
   const formattedAmount = formatCurrency({
     locale,
     currency,
@@ -67,6 +90,24 @@ export function CompactCurrencyFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
+  return (
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <CompactCurrencyFormatterInner
+        amount={amount}
+        currency={currency}
+        locale={locale}
+        className={className}
+      />
+    </ClientOnly>
+  );
+}
+
+function CompactCurrencyFormatterInner({ 
+  amount, 
+  currency = 'THB', 
+  locale,
+  className = '' 
+}: { amount: number; currency?: Currency; locale: Locale; className?: string }) {
   // Format with compact notation for large numbers
   const formatOptions: Intl.NumberFormatOptions = {
     notation: 'compact',

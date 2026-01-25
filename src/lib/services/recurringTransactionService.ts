@@ -1,5 +1,6 @@
 import { Transaction, TransactionInsert } from '@/lib/types/database'
-import { createClient } from '@/lib/supabase/client'
+import { createClient as createClientSide } from '@/lib/supabase/client'
+import { createClient as createServerSide } from '@/lib/supabase/server'
 
 export interface RecurringTransactionTemplate {
   id: string
@@ -20,18 +21,28 @@ export interface RecurringTransactionFilters {
 }
 
 class RecurringTransactionService {
-  private supabase = createClient()
+  private getSupabaseClient() {
+    // Use client-side supabase for browser environment
+    if (typeof window !== 'undefined') {
+      return createClientSide()
+    }
+    // This won't work on server-side, so we'll handle it differently
+    throw new Error('Server-side usage requires passing supabase client')
+  }
 
   /**
    * Get all recurring transaction templates for the authenticated user
+   * For client-side usage only
    */
   async getRecurringTransactions(filters?: RecurringTransactionFilters): Promise<Transaction[]> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
 
-    let query = this.supabase
+    let query = supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
@@ -57,15 +68,46 @@ class RecurringTransactionService {
   }
 
   /**
+   * Server-side version - get recurring transactions with provided supabase client
+   */
+  static async getRecurringTransactionsServer(supabase: any, userId: string, filters?: RecurringTransactionFilters): Promise<Transaction[]> {
+    let query = supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_recurring', true)
+      .is('recurring_parent_id', null) // Only get parent transactions (templates)
+      .order('created_at', { ascending: false })
+
+    // Apply filters
+    if (filters?.type) {
+      query = query.eq('type', filters.type)
+    }
+    if (filters?.category) {
+      query = query.eq('category', filters.category)
+    }
+
+    const { data: transactions, error } = await query
+
+    if (error) {
+      throw new Error(`Failed to fetch recurring transactions: ${error.message}`)
+    }
+
+    return transactions || []
+  }
+
+  /**
    * Get all generated instances of a recurring transaction
    */
   async getRecurringTransactionInstances(parentId: string): Promise<Transaction[]> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
 
-    const { data: transactions, error } = await this.supabase
+    const { data: transactions, error } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
@@ -81,9 +123,12 @@ class RecurringTransactionService {
 
   /**
    * Generate monthly recurring transactions for all active templates
+   * Client-side version
    */
   async generateMonthlyRecurringTransactions(): Promise<Transaction[]> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
@@ -114,7 +159,9 @@ class RecurringTransactionService {
    * Generate a single recurring transaction instance
    */
   async generateRecurringInstance(template: Transaction, targetDate: Date): Promise<Transaction> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
@@ -131,7 +178,7 @@ class RecurringTransactionService {
       recurring_parent_id: template.id,
     }
 
-    const { data: transaction, error } = await this.supabase
+    const { data: transaction, error } = await supabase
       .from('transactions')
       .insert(transactionData)
       .select()
@@ -148,7 +195,9 @@ class RecurringTransactionService {
    * Check if a recurring transaction needs to be generated for a specific month
    */
   private async shouldGenerateForMonth(templateId: string, year: number, month: number): Promise<boolean> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
@@ -157,7 +206,7 @@ class RecurringTransactionService {
     const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0]
     const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0]
 
-    const { data: existingTransactions, error } = await this.supabase
+    const { data: existingTransactions, error } = await supabase
       .from('transactions')
       .select('id')
       .eq('user_id', user.id)
@@ -177,13 +226,15 @@ class RecurringTransactionService {
    * Update a recurring transaction template
    */
   async updateRecurringTransaction(id: string, updateData: Partial<Transaction>): Promise<Transaction> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
 
     // Verify the transaction is a recurring template and belongs to the user
-    const { data: existingTransaction, error: fetchError } = await this.supabase
+    const { data: existingTransaction, error: fetchError } = await supabase
       .from('transactions')
       .select('*')
       .eq('id', id)
@@ -197,7 +248,7 @@ class RecurringTransactionService {
     }
 
     // Update the template
-    const { data: transaction, error } = await this.supabase
+    const { data: transaction, error } = await supabase
       .from('transactions')
       .update({
         ...updateData,
@@ -219,14 +270,16 @@ class RecurringTransactionService {
    * Delete a recurring transaction template and optionally its instances
    */
   async deleteRecurringTransaction(id: string, deleteInstances: boolean = false): Promise<void> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
 
     // If requested, delete all generated instances first
     if (deleteInstances) {
-      const { error: instancesError } = await this.supabase
+      const { error: instancesError } = await supabase
         .from('transactions')
         .delete()
         .eq('user_id', user.id)
@@ -237,7 +290,7 @@ class RecurringTransactionService {
       }
     } else {
       // Just unlink instances by setting recurring_parent_id to null
-      const { error: unlinkError } = await this.supabase
+      const { error: unlinkError } = await supabase
         .from('transactions')
         .update({ recurring_parent_id: null })
         .eq('user_id', user.id)
@@ -249,7 +302,7 @@ class RecurringTransactionService {
     }
 
     // Delete the template
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('transactions')
       .delete()
       .eq('id', id)
@@ -264,13 +317,15 @@ class RecurringTransactionService {
    * Pause/resume a recurring transaction template
    */
   async toggleRecurringTransaction(id: string): Promise<Transaction> {
-    const { data: { user }, error: authError } = await this.supabase.auth.getUser()
+    const supabase = this.getSupabaseClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
     }
 
     // Get current state
-    const { data: transaction, error: fetchError } = await this.supabase
+    const { data: transaction, error: fetchError } = await supabase
       .from('transactions')
       .select('*')
       .eq('id', id)
@@ -291,7 +346,7 @@ class RecurringTransactionService {
       : (transaction.description || '').replace('[PAUSED]', '').trim()
 
     // Update the template
-    const { data: updatedTransaction, error } = await this.supabase
+    const { data: updatedTransaction, error } = await supabase
       .from('transactions')
       .update({
         description: newDescription,

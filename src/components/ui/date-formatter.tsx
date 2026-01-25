@@ -4,6 +4,7 @@ import React from 'react';
 import { useLocale } from '@/lib/contexts/language-context';
 import { formatDate, formatTime, formatRelativeTime } from '@/lib/utils/formatting';
 import { Locale } from '@/i18n/config';
+import { ClientOnly } from './client-only';
 
 interface DateFormatterProps {
   date: Date;
@@ -38,12 +39,12 @@ export function DateFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
-  const formattedDate = formatDate({ locale, date, format });
-
   return (
-    <span className={className} data-testid="date-formatter">
-      {formattedDate}
-    </span>
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <span className={className} data-testid="date-formatter">
+        {formatDate({ locale, date, format })}
+      </span>
+    </ClientOnly>
   );
 }
 
@@ -59,12 +60,12 @@ export function TimeFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
-  const formattedTime = formatTime(locale, date);
-
   return (
-    <span className={className} data-testid="time-formatter">
-      {formattedTime}
-    </span>
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <span className={className} data-testid="time-formatter">
+        {formatTime(locale, date)}
+      </span>
+    </ClientOnly>
   );
 }
 
@@ -81,12 +82,12 @@ export function RelativeTimeFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
-  const formattedRelativeTime = formatRelativeTime(locale, date, baseDate);
-
   return (
-    <span className={className} data-testid="relative-time-formatter">
-      {formattedRelativeTime}
-    </span>
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <span className={className} data-testid="relative-time-formatter">
+        {formatRelativeTime(locale, date, baseDate)}
+      </span>
+    </ClientOnly>
   );
 }
 
@@ -103,14 +104,13 @@ export function DateTimeFormatter({
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
 
-  const formattedDate = formatDate({ locale, date, format });
-  const formattedTime = showTime ? formatTime(locale, date) : '';
-
   return (
-    <span className={className} data-testid="datetime-formatter">
-      {formattedDate}
-      {showTime && ` ${formattedTime}`}
-    </span>
+    <ClientOnly fallback={<span className={className}>Loading...</span>}>
+      <span className={className} data-testid="datetime-formatter">
+        {formatDate({ locale, date, format })}
+        {showTime && ` ${formatTime(locale, date)}`}
+      </span>
+    </ClientOnly>
   );
 }
 

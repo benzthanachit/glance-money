@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { Transaction } from '@/lib/types/database'
-import { recurringTransactionService } from '@/lib/services/recurringTransactionService'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +23,7 @@ import { toast } from 'sonner'
 
 interface RecurringTransactionWithStatus extends Transaction {
   isActive: boolean
-  nextDueDate: Date
+  nextDueDate: string // Changed from Date to string to avoid hydration issues
 }
 
 interface RecurringTransactionManagerProps {
@@ -38,8 +37,10 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showInstances, setShowInstances] = useState(false)
+  const [mounted, setMounted] = useState(false) // Add mounted state to prevent hydration issues
 
   useEffect(() => {
+    setMounted(true)
     loadRecurringTransactions()
   }, [])
 
@@ -159,6 +160,16 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
     return icons[category] || '💳'
   }
 
+  // Don't render until component is mounted to prevent hydration issues
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -248,7 +259,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Next Due</span>
-                  <DateFormatter date={transaction.nextDueDate} />
+                  <DateFormatter date={new Date(transaction.nextDueDate)} />
                 </div>
 
                 <div className="flex gap-2 pt-2">

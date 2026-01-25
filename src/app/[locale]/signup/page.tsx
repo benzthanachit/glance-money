@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { signUpWithEmail, ensureUserProfileExists } from '@/lib/supabase/auth-helpers'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -17,7 +17,6 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,18 +36,30 @@ export default function SignupPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+      // Sign up with development-friendly settings
+      const { data, error } = await signUpWithEmail(email, password)
 
       if (error) {
         setError(error.message)
-      } else {
+      } else if (data.user) {
+        // If user is created and confirmed immediately (no email verification needed)
+        if (data.user.email_confirmed_at || !data.user.confirmation_sent_at) {
+          // Try to create user profile immediately
+          const profileResult = await ensureUserProfileExists()
+          
+          if (profileResult.success) {
+            // Redirect to dashboard immediately
+            router.push('/th/dashboard')
+            return
+          } else {
+            console.error('Failed to create user profile:', profileResult.error)
+          }
+        }
+
         setSuccess(true)
         // Redirect to login after successful signup
         setTimeout(() => {
-          router.push('/login')
+          router.push('/th/login')
         }, 2000)
       }
     } catch (err) {
@@ -152,7 +163,7 @@ export default function SignupPage() {
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
-                  href="/login"
+                  href="/th/login"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Sign in

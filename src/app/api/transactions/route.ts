@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionInsert } from '@/lib/types/database'
 import { validateTransactionData, sanitizeTransactionData } from '@/lib/utils/validation'
+import { ensureUserProfile } from '@/lib/utils/user'
 
 // GET /api/transactions - Get all transactions for authenticated user
 export async function GET(request: NextRequest) {
@@ -66,6 +67,14 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Ensure user profile exists
+    try {
+      await ensureUserProfile(user.id, user.email || '')
+    } catch (error) {
+      console.error('Failed to ensure user profile:', error)
+      return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
     }
 
     // Parse and validate request body

@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { signInWithEmail, ensureUserProfileExists } from '@/lib/supabase/auth-helpers'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,15 +22,20 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error } = await signInWithEmail(email, password)
 
       if (error) {
         setError(error.message)
-      } else {
-        router.push('/')
+      } else if (data.user) {
+        // Ensure user profile exists after successful login
+        const profileResult = await ensureUserProfileExists()
+        
+        if (!profileResult.success) {
+          console.error('Failed to ensure user profile exists:', profileResult.error)
+        }
+
+        // Redirect to dashboard
+        router.push('/th/dashboard')
         router.refresh()
       }
     } catch (err) {
@@ -105,7 +109,7 @@ export default function LoginPage() {
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
                 <Link
-                  href="/signup"
+                  href="/th/signup"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Sign up
