@@ -2,13 +2,18 @@
 
 import { useAuth } from '@/lib/auth/context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { NetStatusCard } from '@/components/dashboard'
 import { ResponsiveLayout } from '@/components/layout'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { useNetStatusTheme } from '@/lib/hooks/useNetStatusTheme'
+import { useLanguage } from '@/lib/contexts/language-context'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { locale } = useLanguage()
+  const { netStatus, totalIncome, totalExpenses, theme, loading, isTransitioning } = useNetStatusTheme()
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
   const tNav = useTranslations('navigation')
@@ -38,15 +43,18 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('netStatus')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">฿0.00</p>
-            <p className="text-sm text-muted-foreground">Coming soon...</p>
-          </CardContent>
-        </Card>
+        {/* Replace the old Net Status card with the new NetStatusCard */}
+        <div className="md:col-span-2 lg:col-span-3">
+          <NetStatusCard
+            netAmount={netStatus}
+            currency="THB"
+            locale={locale}
+            theme={theme}
+            totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            loading={loading}
+          />
+        </div>
 
         <Card>
           <CardHeader>
@@ -69,9 +77,9 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Demo section to show FAB functionality */}
-      <div className="mt-8 text-center">
-        <Card className="mx-auto max-w-md">
+      {/* Demo section to show FAB functionality and theme switching */}
+      <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <Card className="mx-auto max-w-md md:max-w-none">
           <CardHeader>
             <CardTitle>FAB Demo</CardTitle>
           </CardHeader>
@@ -82,6 +90,25 @@ export default function DashboardPage() {
             <p className="text-lg font-semibold">
               FAB clicked: {fabClickCount} times
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mx-auto max-w-md md:max-w-none">
+          <CardHeader>
+            <CardTitle>Theme Demo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-2">
+              Current theme: <span className="font-semibold capitalize">{theme}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isTransitioning ? 'Theme is transitioning...' : 'Theme is stable'}
+            </p>
+            <div className="mt-3 text-xs text-muted-foreground">
+              Theme changes automatically based on Net Status:
+              <br />• Positive = Green theme
+              <br />• Negative = Red theme
+            </div>
           </CardContent>
         </Card>
       </div>

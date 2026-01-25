@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import "../globals.css";
 import { AuthProvider } from "@/lib/auth/context";
 import { LanguageProvider } from "@/lib/contexts/language-context";
+import { ThemeProvider } from "@/lib/contexts/theme-context";
 import { locales, Locale } from '@/i18n/config';
 
 const geistSans = Geist({
@@ -63,9 +64,11 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <LanguageProvider initialLocale={locale as Locale}>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <ThemeProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ThemeProvider>
           </LanguageProvider>
         </NextIntlClientProvider>
       </body>

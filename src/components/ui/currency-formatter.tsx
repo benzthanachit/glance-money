@@ -11,6 +11,7 @@ interface CurrencyFormatterProps {
   locale?: Locale;
   className?: string;
   showSymbol?: boolean;
+  showSign?: boolean;
 }
 
 /**
@@ -22,7 +23,8 @@ export function CurrencyFormatter({
   currency = 'THB', 
   locale: propLocale,
   className = '',
-  showSymbol = true 
+  showSymbol = true,
+  showSign = false
 }: CurrencyFormatterProps) {
   const contextLocale = useLocale();
   const locale = propLocale || contextLocale;
@@ -30,13 +32,21 @@ export function CurrencyFormatter({
   const formattedAmount = formatCurrency({
     locale,
     currency,
-    amount
+    amount: Math.abs(amount)
   });
 
   // If showSymbol is false, remove currency symbols
-  const displayAmount = showSymbol 
+  let displayAmount = showSymbol 
     ? formattedAmount 
     : formattedAmount.replace(/[฿$€]/g, '').trim();
+
+  // Add sign if requested
+  if (showSign) {
+    const sign = amount >= 0 ? '+' : '-';
+    displayAmount = `${sign}${displayAmount}`;
+  } else if (amount < 0) {
+    displayAmount = `-${displayAmount}`;
+  }
 
   return (
     <span className={className} data-testid="currency-formatter">

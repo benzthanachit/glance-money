@@ -10,5 +10,6 @@ export { FloatingActionButton } from './floating-action-button';
 export { CurrencyFormatter, CompactCurrencyFormatter } from './currency-formatter';
 export { DateFormatter, TimeFormatter, RelativeTimeFormatter, DateTimeFormatter } from './date-formatter';
 export { NumberFormatter, PercentageFormatter, CompactNumberFormatter, DecimalFormatter } from './number-formatter';
+export { ThemedWrapper, ThemedText } from './themed-wrapper';
 
 export type { FloatingActionButtonProps } from './floating-action-button';

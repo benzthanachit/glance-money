@@ -115,11 +115,70 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/* Dynamic theme variables for Net Status theming */
+:root.theme-positive {
+  --net-status-primary: oklch(0.646 0.222 142.116); /* Green */
+  --net-status-primary-foreground: oklch(0.985 0.002 247.839);
+  --net-status-accent: oklch(0.828 0.189 142.429); /* Light green */
+  --net-status-accent-foreground: oklch(0.21 0.034 264.665);
+  --net-status-border: oklch(0.828 0.189 142.429 / 30%);
+  --net-status-background: oklch(0.828 0.189 142.429 / 5%);
+}
+
+:root.theme-negative {
+  --net-status-primary: oklch(0.577 0.245 27.325); /* Red */
+  --net-status-primary-foreground: oklch(0.985 0.002 247.839);
+  --net-status-accent: oklch(0.704 0.191 22.216); /* Light red */
+  --net-status-accent-foreground: oklch(0.21 0.034 264.665);
+  --net-status-border: oklch(0.704 0.191 22.216 / 30%);
+  --net-status-background: oklch(0.704 0.191 22.216 / 5%);
+}
+
+.dark.theme-positive {
+  --net-status-primary: oklch(0.828 0.189 142.429); /* Brighter green for dark mode */
+  --net-status-primary-foreground: oklch(0.13 0.028 261.692);
+  --net-status-accent: oklch(0.646 0.222 142.116);
+  --net-status-accent-foreground: oklch(0.985 0.002 247.839);
+  --net-status-border: oklch(0.828 0.189 142.429 / 40%);
+  --net-status-background: oklch(0.828 0.189 142.429 / 10%);
+}
+
+.dark.theme-negative {
+  --net-status-primary: oklch(0.704 0.191 22.216); /* Brighter red for dark mode */
+  --net-status-primary-foreground: oklch(0.13 0.028 261.692);
+  --net-status-accent: oklch(0.577 0.245 27.325);
+  --net-status-accent-foreground: oklch(0.985 0.002 247.839);
+  --net-status-border: oklch(0.704 0.191 22.216 / 40%);
+  --net-status-background: oklch(0.704 0.191 22.216 / 10%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* Smooth transitions for theme changes */
+  .theme-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Net status themed elements */
+  .net-status-primary {
+    color: var(--net-status-primary);
+  }
+  
+  .net-status-accent {
+    color: var(--net-status-accent);
+  }
+  
+  .net-status-border {
+    border-color: var(--net-status-border);
+  }
+  
+  .net-status-bg {
+    background-color: var(--net-status-background);
   }
 }
