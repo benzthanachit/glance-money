@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { CategorySelector } from '@/components/ui/category-selector'
 import { TransactionFormProps, TransactionData } from '@/lib/types'
 import { Category } from '@/lib/types/database'
 import { categoryService } from '@/lib/services/categoryService'
@@ -223,24 +224,12 @@ export function TransactionForm({ mode, initialData, onSubmit, onCancel }: Trans
         {/* Category Selector */}
         <div className="space-y-2">
           <Label>Category</Label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {filteredCategories.map((category) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => handleCategorySelect(category.id)}
-                className={cn(
-                  "flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all min-h-[80px] hover:bg-accent",
-                  formData.category === category.id
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
-                )}
-              >
-                <span className="text-2xl mb-1">{category.icon}</span>
-                <span className="text-xs font-medium text-center">{category.name}</span>
-              </button>
-            ))}
-          </div>
+          <CategorySelector
+            categories={filteredCategories}
+            selectedCategory={formData.category}
+            onSelect={handleCategorySelect}
+            variant="grid"
+          />
           {errors.category && (
             <p className="text-sm text-red-500">{errors.category}</p>
           )}

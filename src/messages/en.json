@@ -49,7 +49,10 @@
     "currency": "Currency",
     "theme": "Theme",
     "exportData": "Export Data",
-    "importData": "Import Data"
+    "importData": "Import Data",
+    "dataManagement": "Data Management",
+    "preferences": "Preferences",
+    "appearance": "Appearance"
   },
   "common": {
     "loading": "Loading...",

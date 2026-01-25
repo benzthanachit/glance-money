@@ -28,6 +28,7 @@ export interface UpdateTransactionData {
 
 class TransactionService {
   private baseUrl = '/api/transactions'
+  private recurringBaseUrl = '/api/transactions/recurring'
 
   async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
     const params = new URLSearchParams()
@@ -120,6 +121,112 @@ class TransactionService {
       const error = await response.json()
       throw new Error(error.error || 'Failed to delete transaction')
     }
+  }
+
+  // Recurring transaction methods
+  async getRecurringTransactions(filters?: { type?: 'income' | 'expense'; category?: string }): Promise<Transaction[]> {
+    const params = new URLSearchParams()
+    
+    if (filters?.type) params.append('type', filters.type)
+    if (filters?.category) params.append('category', filters.category)
+
+    const url = params.toString() ? `${this.recurringBaseUrl}?${params}` : this.recurringBaseUrl
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch recurring transactions')
+    }
+
+    const data = await response.json()
+    return data.recurringTransactions
+  }
+
+  async generateMonthlyRecurringTransactions(): Promise<{ message: string; transactions: Transaction[] }> {
+    const response = await fetch(this.recurringBaseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to generate recurring transactions')
+    }
+
+    return await response.json()
+  }
+
+  async updateRecurringTransaction(id: string, updateData: UpdateTransactionData): Promise<Transaction> {
+    const response = await fetch(`${this.recurringBaseUrl}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update recurring transaction')
+    }
+
+    const data = await response.json()
+    return data.transaction
+  }
+
+  async deleteRecurringTransaction(id: string, deleteInstances: boolean = false): Promise<void> {
+    const response = await fetch(`${this.recurringBaseUrl}/${id}?deleteInstances=${deleteInstances}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete recurring transaction')
+    }
+  }
+
+  async toggleRecurringTransaction(id: string): Promise<{ transaction: Transaction; isActive: boolean; message: string }> {
+    const response = await fetch(`${this.recurringBaseUrl}/${id}/toggle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to toggle recurring transaction')
+    }
+
+    return await response.json()
+  }
+
+  async getRecurringTransactionInstances(parentId: string): Promise<Transaction[]> {
+    const response = await fetch(`${this.recurringBaseUrl}/${parentId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch recurring transaction instances')
+    }
+
+    const data = await response.json()
+    return data.instances
   }
 }
 

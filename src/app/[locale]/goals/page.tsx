@@ -1,26 +1,29 @@
 'use client'
 
 import { ResponsiveLayout } from '@/components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GoalsOverview } from '@/components/goals'
+import { useLanguage } from '@/lib/contexts/language-context'
+import { useCurrency } from '@/lib/contexts/currency-context'
 
 export default function GoalsPage() {
+  const { locale } = useLanguage()
+  const { currency } = useCurrency()
+
   return (
     <ResponsiveLayout currentPage="goals">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Goals</h1>
-        <p className="text-muted-foreground">Track your financial goals</p>
+        <h1 className="text-3xl font-bold text-foreground">
+          {locale === 'th' ? 'เป้าหมาย' : 'Goals'}
+        </h1>
+        <p className="text-muted-foreground">
+          {locale === 'th' ? 'ติดตามเป้าหมายทางการเงินของคุณ' : 'Track your financial goals'}
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Financial Goals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Goals management functionality will be implemented in upcoming tasks.
-          </p>
-        </CardContent>
-      </Card>
+      <GoalsOverview
+        currency={currency}
+        locale={locale}
+      />
     </ResponsiveLayout>
   )
 }

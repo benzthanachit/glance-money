@@ -11,5 +11,11 @@ export { CurrencyFormatter, CompactCurrencyFormatter } from './currency-formatte
 export { DateFormatter, TimeFormatter, RelativeTimeFormatter, DateTimeFormatter } from './date-formatter';
 export { NumberFormatter, PercentageFormatter, CompactNumberFormatter, DecimalFormatter } from './number-formatter';
 export { ThemedWrapper, ThemedText } from './themed-wrapper';
+export { CategorySelector } from './category-selector';
+
+// Performance and optimization components
+export { Skeleton, CardSkeleton, ChartSkeleton, ListSkeleton } from './skeleton';
+export { LazyWrapper, ViewportLazy, withLazyLoading, useIntersectionObserver } from './lazy-wrapper';
+export { OptimizedImage, ImagePresets } from './optimized-image';
 
 export type { FloatingActionButtonProps } from './floating-action-button';

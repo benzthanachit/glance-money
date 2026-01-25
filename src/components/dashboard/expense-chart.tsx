@@ -120,6 +120,7 @@ export function ExpenseChart({
                 {categoryBreakdown.map((category, index) => {
                   const strokeDasharray = `${(category.percentage / 100) * circumference} ${circumference}`;
                   const strokeDashoffset = -cumulativePercentage * circumference / 100;
+                  const currentCumulativePercentage = cumulativePercentage;
                   cumulativePercentage += category.percentage;
                   
                   return (
@@ -129,7 +130,7 @@ export function ExpenseChart({
                       fill="transparent"
                       strokeWidth={strokeWidth}
                       strokeDasharray={strokeDasharray}
-                      strokeDashoffset={strokeDashoffset}
+                      strokeDashoffset={-currentCumulativePercentage * circumference / 100}
                       r={normalizedRadius}
                       cx={radius}
                       cy={radius}

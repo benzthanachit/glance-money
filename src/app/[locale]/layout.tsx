@@ -7,7 +7,11 @@ import "../globals.css";
 import { AuthProvider } from "@/lib/auth/context";
 import { LanguageProvider } from "@/lib/contexts/language-context";
 import { ThemeProvider } from "@/lib/contexts/theme-context";
+import { CurrencyProvider } from "@/lib/contexts/currency-context";
 import { locales, Locale } from '@/i18n/config';
+import { Toaster } from "@/components/ui/sonner";
+import OfflineToast from "@/components/ui/offline-toast";
+import ServiceWorkerRegistration from "@/components/ui/service-worker-registration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,11 +68,16 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <LanguageProvider initialLocale={locale as Locale}>
-            <ThemeProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </ThemeProvider>
+            <CurrencyProvider>
+              <ThemeProvider>
+                <AuthProvider>
+                  {children}
+                  <Toaster />
+                  <OfflineToast />
+                  <ServiceWorkerRegistration />
+                </AuthProvider>
+              </ThemeProvider>
+            </CurrencyProvider>
           </LanguageProvider>
         </NextIntlClientProvider>
       </body>

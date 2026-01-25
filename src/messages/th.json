@@ -49,7 +49,10 @@
     "currency": "สกุลเงิน",
     "theme": "ธีม",
     "exportData": "ส่งออกข้อมูล",
-    "importData": "นำเข้าข้อมูล"
+    "importData": "นำเข้าข้อมูล",
+    "dataManagement": "จัดการข้อมูล",
+    "preferences": "การตั้งค่า",
+    "appearance": "รูปลักษณ์"
   },
   "common": {
     "loading": "กำลังโหลด...",

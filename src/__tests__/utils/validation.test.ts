@@ -2,10 +2,17 @@ import { describe, it, expect } from 'vitest'
 import { 
   validateTransactionData, 
   validateTransactionUpdateData,
+  validateGoalData,
+  validateGoalUpdateData,
+  validateTransactionAllocationData,
   sanitizeTransactionData,
-  sanitizeTransactionUpdateData
+  sanitizeTransactionUpdateData,
+  sanitizeGoalData,
+  sanitizeGoalUpdateData,
+  sanitizeTransactionAllocationData
 } from '@/lib/utils/validation'
 import { CreateTransactionData, UpdateTransactionData } from '@/lib/services/transactionService'
+import { CreateGoalData, UpdateGoalData, AllocateTransactionData } from '@/lib/services/goalService'
 
 describe('Transaction Validation', () => {
   describe('validateTransactionData', () => {
@@ -146,6 +153,178 @@ describe('Transaction Validation', () => {
       const sanitized = sanitizeTransactionUpdateData(inputData)
       expect(sanitized.amount).toBe(50)
       expect(sanitized.description).toBeUndefined()
+    })
+  })
+})
+
+describe('Goal Validation', () => {
+  describe('validateGoalData', () => {
+    it('should validate valid goal data', () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+      const futureDateString = futureDate.toISOString().split('T')[0]
+
+      const validData: CreateGoalData = {
+        name: 'Emergency Fund',
+        targetAmount: 10000,
+        deadline: futureDateString,
+      }
+
+      const result = validateGoalData(validData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should reject goal with missing required fields', () => {
+      const invalidData = {
+        deadline: '2024-12-31',
+      } as CreateGoalData
+
+      const result = validateGoalData(invalidData)
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.field === 'name')).toBe(true)
+      expect(result.errors.some(e => e.field === 'targetAmount')).toBe(true)
+    })
+
+    it('should reject goal with invalid target amount', () => {
+      const invalidData: CreateGoalData = {
+        name: 'Test Goal',
+        targetAmount: -1000,
+      }
+
+      const result = validateGoalData(invalidData)
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.field === 'targetAmount')).toBe(true)
+    })
+
+    it('should reject goal with past deadline', () => {
+      const invalidData: CreateGoalData = {
+        name: 'Test Goal',
+        targetAmount: 5000,
+        deadline: '2020-01-01', // Past date
+      }
+
+      const result = validateGoalData(invalidData)
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.field === 'deadline')).toBe(true)
+    })
+
+    it('should accept goal without deadline', () => {
+      const validData: CreateGoalData = {
+        name: 'No Deadline Goal',
+        targetAmount: 5000,
+      }
+
+      const result = validateGoalData(validData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+  })
+
+  describe('validateGoalUpdateData', () => {
+    it('should validate valid update data', () => {
+      const validUpdateData: UpdateGoalData = {
+        name: 'Updated Goal Name',
+        targetAmount: 15000,
+      }
+
+      const result = validateGoalUpdateData(validUpdateData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should allow empty update data', () => {
+      const emptyUpdateData: UpdateGoalData = {}
+
+      const result = validateGoalUpdateData(emptyUpdateData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should allow null deadline to remove deadline', () => {
+      const updateData: UpdateGoalData = {
+        deadline: null,
+      }
+
+      const result = validateGoalUpdateData(updateData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+  })
+
+  describe('validateTransactionAllocationData', () => {
+    it('should validate valid allocation data', () => {
+      const validData: AllocateTransactionData = {
+        transactionId: 'transaction123',
+        allocatedAmount: 500,
+      }
+
+      const result = validateTransactionAllocationData(validData)
+      expect(result.isValid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
+
+    it('should reject allocation with missing fields', () => {
+      const invalidData = {
+        allocatedAmount: 500,
+      } as AllocateTransactionData
+
+      const result = validateTransactionAllocationData(invalidData)
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.field === 'transactionId')).toBe(true)
+    })
+
+    it('should reject allocation with invalid amount', () => {
+      const invalidData: AllocateTransactionData = {
+        transactionId: 'transaction123',
+        allocatedAmount: -100,
+      }
+
+      const result = validateTransactionAllocationData(invalidData)
+      expect(result.isValid).toBe(false)
+      expect(result.errors.some(e => e.field === 'allocatedAmount')).toBe(true)
+    })
+  })
+
+  describe('sanitizeGoalData', () => {
+    it('should sanitize goal data correctly', () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+      const futureDateString = futureDate.toISOString().split('T')[0]
+
+      const inputData: CreateGoalData = {
+        name: '  Emergency Fund  ',
+        targetAmount: 10000,
+        deadline: futureDateString,
+      }
+
+      const sanitized = sanitizeGoalData(inputData)
+      expect(sanitized.name).toBe('Emergency Fund')
+      expect(sanitized.targetAmount).toBe(10000)
+      expect(sanitized.deadline).toBe(futureDateString)
+    })
+
+    it('should handle missing deadline', () => {
+      const inputData: CreateGoalData = {
+        name: 'Test Goal',
+        targetAmount: 5000,
+      }
+
+      const sanitized = sanitizeGoalData(inputData)
+      expect(sanitized.deadline).toBeUndefined()
+    })
+  })
+
+  describe('sanitizeTransactionAllocationData', () => {
+    it('should sanitize allocation data correctly', () => {
+      const inputData: AllocateTransactionData = {
+        transactionId: '  transaction123  ',
+        allocatedAmount: 500,
+      }
+
+      const sanitized = sanitizeTransactionAllocationData(inputData)
+      expect(sanitized.transactionId).toBe('transaction123')
+      expect(sanitized.allocatedAmount).toBe(500)
     })
   })
 })

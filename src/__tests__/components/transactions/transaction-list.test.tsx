@@ -9,6 +9,27 @@ vi.mock('@/lib/contexts/language-context', () => ({
   useLocale: () => 'en'
 }))
 
+// Mock the auth context
+vi.mock('@/lib/auth/context', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user-id', email: 'test@example.com' },
+    loading: false,
+    signOut: vi.fn()
+  })
+}))
+
+// Mock the transaction subscription hook
+vi.mock('@/lib/hooks/useTransactionSubscription', () => ({
+  useTransactionSubscription: () => ({
+    isConnected: true,
+    isConnecting: false,
+    error: null,
+    reconnectAttempts: 0,
+    lastConnected: new Date(),
+    reconnect: vi.fn()
+  })
+}))
+
 const mockTransactions: Transaction[] = [
   {
     id: '1',

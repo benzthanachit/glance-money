@@ -1,13 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Transaction } from '@/lib/types/database'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { CurrencyFormatter } from '@/components/ui/currency-formatter'
 import { DateFormatter } from '@/components/ui/date-formatter'
+import { CategoryFilter } from './category-filter'
 import { categoryService } from '@/lib/services/categoryService'
+import { useTransactionSubscription } from '@/lib/hooks/useTransactionSubscription'
+import { useAuth } from '@/lib/auth/context'
 import { Edit2, Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +19,11 @@ interface TransactionListProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   groupBy?: 'date' | 'category'
+  categoryFilter?: string
+  onCategoryFilterChange?: (categoryId: string) => void
+  showCategoryFilter?: boolean
   className?: string
+  onTransactionUpdate?: (transactions: Transaction[]) => void
 }
 
 interface GroupedTransactions {
@@ -28,26 +35,68 @@ export function TransactionList({
   onEdit, 
   onDelete, 
   groupBy = 'date',
-  className 
+  categoryFilter = '',
+  onCategoryFilterChange,
+  showCategoryFilter = false,
+  className,
+  onTransactionUpdate
 }: TransactionListProps) {
+  const { user } = useAuth()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null)
+  const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions)
+
+  // Set up real-time subscription for transaction updates
+  const { isConnected, error: subscriptionError } = useTransactionSubscription({
+    userId: user?.id,
+    onInsert: (newTransaction) => {
+      console.log('Transaction inserted in list:', newTransaction)
+      setLocalTransactions(prev => {
+        const updated = [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]
+        onTransactionUpdate?.(updated)
+        return updated
+      })
+    },
+    onUpdate: (updatedTransaction) => {
+      console.log('Transaction updated in list:', updatedTransaction)
+      setLocalTransactions(prev => {
+        const updated = prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+        onTransactionUpdate?.(updated)
+        return updated
+      })
+    },
+    onDelete: (deletedTransactionId) => {
+      console.log('Transaction deleted in list:', deletedTransactionId)
+      setLocalTransactions(prev => {
+        const updated = prev.filter(t => t.id !== deletedTransactionId)
+        onTransactionUpdate?.(updated)
+        return updated
+      })
+    }
+  })
+
+  // Update local transactions when props change
+  useEffect(() => {
+    setLocalTransactions(transactions)
+  }, [transactions])
 
   // Get default categories for icon lookup
-  const defaultCategories = categoryService.getDefaultCategories()
-  
   const getCategoryIcon = (categoryId: string): string => {
-    const category = defaultCategories.find(cat => cat.id === categoryId)
-    return category?.icon || '📝'
+    return categoryService.getCategoryIcon(categoryId)
   }
 
   const getCategoryName = (categoryId: string): string => {
-    const category = defaultCategories.find(cat => cat.id === categoryId)
-    return category?.name || categoryId
+    return categoryService.getCategoryName(categoryId)
   }
 
+  // Filter transactions by category if filter is applied
+  const filteredTransactions = useMemo(() => {
+    if (!categoryFilter) return localTransactions
+    return localTransactions.filter(transaction => transaction.category === categoryFilter)
+  }, [localTransactions, categoryFilter])
+
   // Sort transactions chronologically (newest first)
-  const sortedTransactions = [...transactions].sort((a, b) => 
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 
@@ -197,7 +246,34 @@ export function TransactionList({
     </Card>
   )
 
-  if (transactions.length === 0) {
+  if (filteredTransactions.length === 0 && localTransactions.length > 0) {
+    // Show message when filter results in no transactions
+    return (
+      <div className={cn("space-y-4", className)}>
+        {showCategoryFilter && onCategoryFilterChange && (
+          <CategoryFilter
+            selectedCategory={categoryFilter}
+            onCategoryChange={onCategoryFilterChange}
+            transactionType="both"
+          />
+        )}
+        
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            No transactions found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your category filter or add new transactions
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (localTransactions.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -209,26 +285,56 @@ export function TransactionList({
         <p className="text-sm text-muted-foreground">
           Start tracking your expenses by adding your first transaction
         </p>
+        {subscriptionError && (
+          <p className="text-xs text-red-600 mt-2">
+            Real-time updates unavailable: {subscriptionError}
+          </p>
+        )}
       </div>
     )
   }
 
   return (
     <div className={cn("space-y-4", className)}>
+      {/* Category Filter */}
+      {showCategoryFilter && onCategoryFilterChange && (
+        <CategoryFilter
+          selectedCategory={categoryFilter}
+          onCategoryChange={onCategoryFilterChange}
+          transactionType="both"
+        />
+      )}
+
+      {/* Real-time status indicator */}
+      {subscriptionError && (
+        <div className="text-xs text-red-600 bg-red-50 p-2 rounded-md">
+          Real-time updates unavailable: {subscriptionError}
+        </div>
+      )}
+
+      {/* Transaction Groups */}
       {Object.entries(groupedTransactions).map(([groupKey, groupTransactions]) => (
         <div key={groupKey}>
           {/* Group header */}
           <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-2 mb-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              {groupBy === 'date' ? (
-                <DateFormatter 
-                  date={new Date(groupKey)} 
-                  format="long"
-                />
-              ) : (
-                groupKey
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {groupBy === 'date' ? (
+                  <DateFormatter 
+                    date={new Date(groupKey)} 
+                    format="long"
+                  />
+                ) : (
+                  groupKey
+                )}
+              </h2>
+              {isConnected && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600">Live</span>
+                </div>
               )}
-            </h2>
+            </div>
             <div className="text-xs text-muted-foreground">
               {groupTransactions.length} transaction{groupTransactions.length !== 1 ? 's' : ''}
             </div>

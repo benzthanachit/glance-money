@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencyFormatter } from '@/components/ui/currency-formatter';
 import { CategorySummary } from '@/lib/types';
 import { Currency } from '@/lib/utils/formatting';
+import { categoryService } from '@/lib/services/categoryService';
 import { cn } from '@/lib/utils';
 import { 
   TrendingUp, 
@@ -28,6 +29,13 @@ interface SummaryCardsProps {
 }
 
 const getCategoryIcon = (category: string) => {
+  // First try to get from category service
+  const serviceIcon = categoryService.getCategoryIcon(category);
+  if (serviceIcon !== '📝') {
+    return <span className="text-lg">{serviceIcon}</span>;
+  }
+  
+  // Fallback to Lucide icons for better visual consistency
   const iconMap: Record<string, React.ReactNode> = {
     'Food': <Utensils className="h-5 w-5" />,
     'Transport': <Car className="h-5 w-5" />,

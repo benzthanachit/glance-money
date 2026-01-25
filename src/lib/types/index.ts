@@ -116,3 +116,48 @@ export interface TransactionListProps {
   onDelete: (id: string) => void;
   groupBy?: 'date' | 'category';
 }
+
+// Goal-related types
+export interface GoalTransaction {
+  id: string;
+  goalId: string;
+  transactionId: string;
+  allocatedAmount: number;
+  createdAt: Date;
+}
+
+export interface GoalWithProgress {
+  id: string;
+  userId: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  progressPercentage: number;
+  remainingAmount: number;
+  allocatedTransactions?: GoalTransaction[];
+}
+
+export interface GoalSummary {
+  totalGoals: number;
+  totalTargetAmount: number;
+  totalCurrentAmount: number;
+  averageProgress: number;
+  goalsCompleted: number;
+}
+
+// Goal component prop types
+export interface GoalsOverviewProps {
+  goals: Goal[];
+  onCreateGoal: () => void;
+  onEditGoal: (id: string) => void;
+}
+
+export interface GoalProgressCardProps {
+  goal: GoalWithProgress;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onAllocateTransaction: (goalId: string) => void;
+}

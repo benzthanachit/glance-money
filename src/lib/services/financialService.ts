@@ -15,6 +15,8 @@ import { transactionService } from './transactionService';
 class FinancialService {
   private listeners: Set<(summary: FinancialSummary) => void> = new Set();
   private currentSummary: FinancialSummary | null = null;
+  private optimisticTransactions: Map<string, Transaction> = new Map();
+  private isRefreshing: boolean = false;
 
   /**
    * Subscribe to financial summary updates
@@ -47,7 +49,8 @@ class FinancialService {
   async getFinancialSummary(): Promise<FinancialSummary> {
     try {
       const transactions = await transactionService.getTransactions();
-      const summary = calculateFinancialSummary(transactions);
+      const allTransactions = this.mergeOptimisticTransactions(transactions);
+      const summary = calculateFinancialSummary(allTransactions);
       this.notifyListeners(summary);
       return summary;
     } catch (error) {
@@ -62,7 +65,8 @@ class FinancialService {
   async getCurrentMonthSummary(): Promise<FinancialSummary> {
     try {
       const transactions = await transactionService.getTransactions();
-      const currentMonthTransactions = getCurrentMonthTransactions(transactions);
+      const allTransactions = this.mergeOptimisticTransactions(transactions);
+      const currentMonthTransactions = getCurrentMonthTransactions(allTransactions);
       const summary = calculateFinancialSummary(currentMonthTransactions);
       return summary;
     } catch (error) {
@@ -82,14 +86,15 @@ class FinancialService {
   }> {
     try {
       const transactions = await transactionService.getTransactions();
-      const netStatus = calculateNetStatus(transactions);
+      const allTransactions = this.mergeOptimisticTransactions(transactions);
+      const netStatus = calculateNetStatus(allTransactions);
       const theme = getNetStatusTheme(netStatus);
       
-      const totalIncome = transactions
+      const totalIncome = allTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
       
-      const totalExpenses = transactions
+      const totalExpenses = allTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
@@ -111,7 +116,8 @@ class FinancialService {
   async getCategoryBreakdown(): Promise<CategorySummary[]> {
     try {
       const transactions = await transactionService.getTransactions();
-      return calculateCategoryBreakdown(transactions);
+      const allTransactions = this.mergeOptimisticTransactions(transactions);
+      return calculateCategoryBreakdown(allTransactions);
     } catch (error) {
       console.error('Error calculating category breakdown:', error);
       throw error;
@@ -123,11 +129,18 @@ class FinancialService {
    * Call this after any transaction changes
    */
   async refresh(): Promise<void> {
+    if (this.isRefreshing) {
+      return; // Prevent concurrent refreshes
+    }
+
     try {
+      this.isRefreshing = true;
       await this.getFinancialSummary();
     } catch (error) {
       console.error('Error refreshing financial data:', error);
       throw error;
+    } finally {
+      this.isRefreshing = false;
     }
   }
 
@@ -136,9 +149,91 @@ class FinancialService {
    * Useful for optimistic updates
    */
   calculateSummaryFromTransactions(transactions: Transaction[]): FinancialSummary {
-    const summary = calculateFinancialSummary(transactions);
+    const allTransactions = this.mergeOptimisticTransactions(transactions);
+    const summary = calculateFinancialSummary(allTransactions);
     this.notifyListeners(summary);
     return summary;
+  }
+
+  /**
+   * Add optimistic transaction for immediate UI updates
+   */
+  addOptimisticTransaction(transaction: Transaction): void {
+    console.log('Adding optimistic transaction:', transaction);
+    this.optimisticTransactions.set(transaction.id, transaction);
+    
+    // Immediately recalculate and notify with optimistic data
+    if (this.currentSummary) {
+      try {
+        // Get current transactions and merge with optimistic ones
+        // For immediate update, we'll use the current summary's implied transactions
+        // In a real scenario, we'd need to maintain the transaction list
+        const optimisticArray = Array.from(this.optimisticTransactions.values());
+        const summary = calculateFinancialSummary(optimisticArray);
+        this.notifyListeners(summary);
+      } catch (error) {
+        console.error('Error calculating optimistic summary:', error);
+      }
+    }
+  }
+
+  /**
+   * Remove optimistic transaction (called when real update arrives)
+   */
+  removeOptimisticTransaction(transactionId: string): void {
+    console.log('Removing optimistic transaction:', transactionId);
+    this.optimisticTransactions.delete(transactionId);
+  }
+
+  /**
+   * Update optimistic transaction
+   */
+  updateOptimisticTransaction(transaction: Transaction): void {
+    console.log('Updating optimistic transaction:', transaction);
+    this.optimisticTransactions.set(transaction.id, transaction);
+    
+    // Immediately recalculate and notify
+    if (this.currentSummary) {
+      try {
+        const optimisticArray = Array.from(this.optimisticTransactions.values());
+        const summary = calculateFinancialSummary(optimisticArray);
+        this.notifyListeners(summary);
+      } catch (error) {
+        console.error('Error calculating optimistic summary after update:', error);
+      }
+    }
+  }
+
+  /**
+   * Clear all optimistic transactions
+   */
+  clearOptimisticTransactions(): void {
+    console.log('Clearing all optimistic transactions');
+    this.optimisticTransactions.clear();
+  }
+
+  /**
+   * Merge server transactions with optimistic transactions
+   */
+  private mergeOptimisticTransactions(serverTransactions: Transaction[]): Transaction[] {
+    if (this.optimisticTransactions.size === 0) {
+      return serverTransactions;
+    }
+
+    // Create a map of server transactions for efficient lookup
+    const serverTransactionMap = new Map(serverTransactions.map(t => [t.id, t]));
+    
+    // Start with server transactions
+    const mergedTransactions = [...serverTransactions];
+    
+    // Add optimistic transactions that don't exist on server yet
+    this.optimisticTransactions.forEach((optimisticTransaction, id) => {
+      if (!serverTransactionMap.has(id)) {
+        mergedTransactions.push(optimisticTransaction);
+      }
+    });
+    
+    return mergedTransactions;
   }
 
   /**

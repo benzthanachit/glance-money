@@ -83,6 +83,34 @@ class CategoryService {
       },
     ]
   }
+
+  // Get categories filtered by type
+  getCategoriesByType(type: 'income' | 'expense' | 'both'): Category[] {
+    const categories = this.getDefaultCategories()
+    
+    if (type === 'both') {
+      return categories
+    }
+    
+    return categories.filter(category => category.type === type || category.type === 'both')
+  }
+
+  // Get category by ID
+  getCategoryById(id: string): Category | undefined {
+    return this.getDefaultCategories().find(category => category.id === id)
+  }
+
+  // Get category icon by ID
+  getCategoryIcon(id: string): string {
+    const category = this.getCategoryById(id)
+    return category?.icon || '📝'
+  }
+
+  // Get category name by ID
+  getCategoryName(id: string): string {
+    const category = this.getCategoryById(id)
+    return category?.name || id
+  }
 }
 
 export const categoryService = new CategoryService()
