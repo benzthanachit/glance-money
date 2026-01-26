@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user (optional for categories, but good for consistency)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -23,9 +23,15 @@ export async function GET(request: NextRequest) {
       .order('name')
 
     // Apply type filter
-    if (type && (type === 'income' || type === 'expense' || type === 'both')) {
+    // Apply type filter
+    // If type is 'both', we generally want ALL categories (income + expense + both)
+    // OR if the client specifically means "categories that are both", but usually contexts imply "all".
+    // Given the issues, 'both' here likely means "show me everything".
+    // So we only filter if type is income or expense.
+    if (type && (type === 'income' || type === 'expense')) {
       query = query.or(`type.eq.${type},type.eq.both`)
     }
+    // If type is 'both' or undefined, we return everything.
 
     const { data: categories, error } = await query
 

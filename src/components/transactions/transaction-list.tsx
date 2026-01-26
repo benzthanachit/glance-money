@@ -88,9 +88,23 @@ export function TransactionList({
     setLocalTransactions(transactions)
   }, [transactions])
 
+  // Ensure categories are loaded for icon lookup
+  // We force a fetch to ensure the cache is populated
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+  useEffect(() => {
+    const loadCategories = async () => {
+      await categoryService.getCategories({ type: 'both' })
+      setCategoriesLoaded(true) // Trigger re-render
+    }
+    loadCategories()
+  }, [])
+
   // Get default categories for icon lookup
   const getCategoryIcon = (categoryId: string): string => {
     if (!categoryId || categoryId === 'goal-allocation' || categoryId === '22d2169c-9213-4d69-9cc9-4f5393846553') return '🎯' // Goal Icon
+
+    // Determine which store to look in? The service handles cache.
+    // Just return result.
     return categoryService.getCategoryIcon(categoryId)
   }
 
