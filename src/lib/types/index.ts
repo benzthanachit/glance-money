@@ -108,6 +108,8 @@ export interface TransactionData {
   description?: string;
   date: Date;
   isRecurring: boolean;
+  linkedGoalId?: string;
+  allocationAmount?: number;
 }
 
 export interface TransactionListProps {

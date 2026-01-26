@@ -8,7 +8,7 @@ import { ensureUserProfile } from '@/lib/utils/user'
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -79,28 +79,40 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json()
-    
+
     // Validate the transaction data
     const validation = validateTransactionData(body)
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
-          error: 'Validation failed', 
-          details: validation.errors 
-        }, 
+        {
+          error: 'Validation failed',
+          details: validation.errors
+        },
         { status: 400 }
       )
     }
 
     // Sanitize the data
     const sanitizedData = sanitizeTransactionData(body)
-    
+
+    // Handle 'goal-allocation' specific logic if needed, but now we use a hardcoded ID from the frontend.
+    // We assume the frontend passes a valid Category ID (either a real one or the hardcoded Goal Category ID).
+    // If the category doesn't exist in the DB, the FK constraint will fail, which is expected/safe.
+
+    let finalCategoryId = sanitizedData.category
+    const GOAL_CATEGORY_ID = '22d2169c-9213-4d69-9cc9-4f5393846553';
+
+    // If somehow we still get 'goal-allocation', map it to the hardcoded ID just in case
+    if (sanitizedData.category === 'goal-allocation') {
+      finalCategoryId = GOAL_CATEGORY_ID;
+    }
+
     // Prepare transaction data
     const transactionData: TransactionInsert = {
       user_id: user.id,
       amount: sanitizedData.amount,
       type: sanitizedData.type,
-      category: sanitizedData.category,
+      category: finalCategoryId,
       description: sanitizedData.description || null,
       date: sanitizedData.date,
       is_recurring: sanitizedData.is_recurring,

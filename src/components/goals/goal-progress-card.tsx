@@ -9,15 +9,17 @@ import { DateFormatter } from '@/components/ui/date-formatter'
 import { GoalWithProgress } from '@/lib/types'
 import { Currency } from '@/lib/utils/formatting'
 import { cn } from '@/lib/utils'
-import { 
-  Target, 
-  Calendar, 
-  TrendingUp, 
-  Edit, 
-  Trash2, 
-  Plus,
+import {
+  Target,
+  Calendar,
+  TrendingUp,
+  Pencil, // Changed from Edit
+  Trash2,
+  PlusCircle, // Added
   CheckCircle2
 } from 'lucide-react'
+import { GoalAllocationDialog } from './goal-allocation-dialog' // Added
+import { useState } from 'react' // Added
 
 interface GoalProgressCardProps {
   goal: GoalWithProgress
@@ -25,8 +27,8 @@ interface GoalProgressCardProps {
   locale: 'th' | 'en'
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onAllocateTransaction: (goalId: string) => void
-  className?: string
+  onAllocateTransaction: (goalId: string) => void // Kept for prop compatibility, but we'll use internal dialog
+  onGoalUpdated?: () => void // Added
 }
 
 export function GoalProgressCard({
@@ -36,11 +38,14 @@ export function GoalProgressCard({
   onEdit,
   onDelete,
   onAllocateTransaction,
-  className
-}: GoalProgressCardProps) {
+  onGoalUpdated,
+  className // Added className back to props destructuring
+}: GoalProgressCardProps & { className?: string }) { // Added className to type
+  const [isAllocationOpen, setIsAllocationOpen] = useState(false) // Added
+
   const isCompleted = goal.progressPercentage >= 100
   const isOverdue = goal.deadline && new Date(goal.deadline) < new Date() && !isCompleted
-  
+
   const getProgressColor = () => {
     if (isCompleted) return 'bg-green-500'
     if (isOverdue) return 'bg-red-500'
@@ -66,7 +71,7 @@ export function GoalProgressCard({
   }
 
   return (
-    <Card 
+    <Card
       className={cn(
         'w-full touch-manipulation transition-all duration-200 hover:shadow-md',
         isCompleted && 'ring-2 ring-green-500/20 bg-green-50/50 dark:bg-green-950/20',
@@ -89,7 +94,7 @@ export function GoalProgressCard({
               {getStatusText()}
             </div>
           </div>
-          
+
           <CardAction>
             <div className="flex items-center gap-1">
               <Button
@@ -99,7 +104,7 @@ export function GoalProgressCard({
                 className="h-8 w-8"
                 aria-label={locale === 'th' ? 'แก้ไขเป้าหมาย' : 'Edit goal'}
               >
-                <Edit className="h-4 w-4" />
+                <Pencil className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -126,12 +131,12 @@ export function GoalProgressCard({
               {Math.min(goal.progressPercentage, 100).toFixed(1)}%
             </span>
           </div>
-          
-          <Progress 
-            value={Math.min(goal.progressPercentage, 100)} 
+
+          <Progress
+            value={Math.min(goal.progressPercentage, 100)}
             className="h-3"
           />
-          
+
           <div className="flex items-center justify-between text-sm">
             <div className="text-muted-foreground">
               <CurrencyFormatter
@@ -193,7 +198,7 @@ export function GoalProgressCard({
             onClick={() => onAllocateTransaction(goal.id)}
             className="w-full mt-4"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-4 w-4 mr-2" />
             {locale === 'th' ? 'จัดสรรเงิน' : 'Allocate Money'}
           </Button>
         )}

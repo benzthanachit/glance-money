@@ -30,10 +30,10 @@ interface GroupedTransactions {
   [key: string]: Transaction[]
 }
 
-export function TransactionList({ 
-  transactions, 
-  onEdit, 
-  onDelete, 
+export function TransactionList({
+  transactions,
+  onEdit,
+  onDelete,
   groupBy = 'date',
   categoryFilter = '',
   onCategoryFilterChange,
@@ -47,32 +47,40 @@ export function TransactionList({
   const [localTransactions, setLocalTransactions] = useState<Transaction[]>(transactions)
 
   // Set up real-time subscription for transaction updates
+  // Memoize handlers to prevent infinite re-renders in subscription hook
+  const handleInsert = React.useCallback((newTransaction: Transaction) => {
+    console.log('Transaction inserted in list:', newTransaction)
+    setLocalTransactions(prev => {
+      const updated = [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]
+      onTransactionUpdate?.(updated)
+      return updated
+    })
+  }, [onTransactionUpdate])
+
+  const handleUpdate = React.useCallback((updatedTransaction: Transaction) => {
+    console.log('Transaction updated in list:', updatedTransaction)
+    setLocalTransactions(prev => {
+      const updated = prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+      onTransactionUpdate?.(updated)
+      return updated
+    })
+  }, [onTransactionUpdate])
+
+  const handleDelete = React.useCallback((deletedTransactionId: string) => {
+    console.log('Transaction deleted in list:', deletedTransactionId)
+    setLocalTransactions(prev => {
+      const updated = prev.filter(t => t.id !== deletedTransactionId)
+      onTransactionUpdate?.(updated)
+      return updated
+    })
+  }, [onTransactionUpdate])
+
+  // Set up real-time subscription for transaction updates
   const { isConnected, error: subscriptionError } = useTransactionSubscription({
     userId: user?.id,
-    onInsert: (newTransaction) => {
-      console.log('Transaction inserted in list:', newTransaction)
-      setLocalTransactions(prev => {
-        const updated = [newTransaction, ...prev.filter(t => t.id !== newTransaction.id)]
-        onTransactionUpdate?.(updated)
-        return updated
-      })
-    },
-    onUpdate: (updatedTransaction) => {
-      console.log('Transaction updated in list:', updatedTransaction)
-      setLocalTransactions(prev => {
-        const updated = prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
-        onTransactionUpdate?.(updated)
-        return updated
-      })
-    },
-    onDelete: (deletedTransactionId) => {
-      console.log('Transaction deleted in list:', deletedTransactionId)
-      setLocalTransactions(prev => {
-        const updated = prev.filter(t => t.id !== deletedTransactionId)
-        onTransactionUpdate?.(updated)
-        return updated
-      })
-    }
+    onInsert: handleInsert,
+    onUpdate: handleUpdate,
+    onDelete: handleDelete
   })
 
   // Update local transactions when props change
@@ -82,10 +90,12 @@ export function TransactionList({
 
   // Get default categories for icon lookup
   const getCategoryIcon = (categoryId: string): string => {
+    if (!categoryId || categoryId === 'goal-allocation' || categoryId === '22d2169c-9213-4d69-9cc9-4f5393846553') return '🎯' // Goal Icon
     return categoryService.getCategoryIcon(categoryId)
   }
 
   const getCategoryName = (categoryId: string): string => {
+    if (!categoryId || categoryId === 'goal-allocation' || categoryId === '22d2169c-9213-4d69-9cc9-4f5393846553') return 'Goal Expense'
     return categoryService.getCategoryName(categoryId)
   }
 
@@ -96,25 +106,25 @@ export function TransactionList({
   }, [localTransactions, categoryFilter])
 
   // Sort transactions chronologically (newest first)
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => 
+  const sortedTransactions = [...filteredTransactions].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 
   // Group transactions if needed
   const groupedTransactions: GroupedTransactions = sortedTransactions.reduce((groups, transaction) => {
     let key: string
-    
+
     if (groupBy === 'date') {
       key = new Date(transaction.date).toDateString()
     } else {
       key = getCategoryName(transaction.category)
     }
-    
+
     if (!groups[key]) {
       groups[key] = []
     }
     groups[key].push(transaction)
-    
+
     return groups
   }, {} as GroupedTransactions)
 
@@ -147,7 +157,7 @@ export function TransactionList({
                 <span className="text-lg">{getCategoryIcon(transaction.category)}</span>
               </div>
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">
                 <h3 className="font-medium text-sm truncate">
@@ -161,16 +171,16 @@ export function TransactionList({
                   )}
                 </div>
               </div>
-              
+
               {transaction.description && (
                 <p className="text-xs text-muted-foreground truncate mt-1">
                   {transaction.description}
                 </p>
               )}
-              
+
               <div className="flex items-center space-x-2 mt-1">
-                <DateFormatter 
-                  date={new Date(transaction.date)} 
+                <DateFormatter
+                  date={new Date(transaction.date)}
                   format="short"
                   className="text-xs text-muted-foreground"
                 />
@@ -194,7 +204,7 @@ export function TransactionList({
                 <CurrencyFormatter amount={transaction.amount} />
               </div>
             </div>
-            
+
             {/* Action buttons - hidden on mobile, visible on desktop */}
             <div className="hidden md:flex items-center space-x-1">
               <Button
@@ -206,7 +216,7 @@ export function TransactionList({
                 <Edit2 className="w-4 h-4" />
                 <span className="sr-only">Edit transaction</span>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -231,7 +241,7 @@ export function TransactionList({
             <Edit2 className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -257,7 +267,7 @@ export function TransactionList({
             transactionType="both"
           />
         )}
-        
+
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
             <span className="text-2xl">🔍</span>
@@ -320,8 +330,8 @@ export function TransactionList({
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 {groupBy === 'date' ? (
-                  <DateFormatter 
-                    date={new Date(groupKey)} 
+                  <DateFormatter
+                    date={new Date(groupKey)}
                     format="long"
                   />
                 ) : (
@@ -339,7 +349,7 @@ export function TransactionList({
               {groupTransactions.length} transaction{groupTransactions.length !== 1 ? 's' : ''}
             </div>
           </div>
-          
+
           {/* Transactions in group */}
           <div className="space-y-2">
             {groupTransactions.map(renderTransaction)}
@@ -356,7 +366,7 @@ export function TransactionList({
               Are you sure you want to delete this transaction? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           {transactionToDelete && (
             <div className="py-4">
               <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
@@ -381,7 +391,7 @@ export function TransactionList({
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={handleDeleteCancel}>
               Cancel

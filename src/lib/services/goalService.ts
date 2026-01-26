@@ -29,13 +29,13 @@ class GoalService {
 
   async getGoals(filters?: GoalFilters): Promise<GoalWithProgress[]> {
     const params = new URLSearchParams()
-    
+
     if (filters?.completed !== undefined) params.append('completed', filters.completed.toString())
     if (filters?.hasDeadline !== undefined) params.append('hasDeadline', filters.hasDeadline.toString())
     if (filters?.limit) params.append('limit', filters.limit.toString())
 
     const url = params.toString() ? `${this.baseUrl}?${params}` : this.baseUrl
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -187,8 +187,8 @@ class GoalService {
   }
 
   async updateTransactionAllocation(
-    goalId: string, 
-    allocationId: string, 
+    goalId: string,
+    allocationId: string,
     allocatedAmount: number
   ): Promise<GoalTransaction> {
     const response = await fetch(`${this.baseUrl}/${goalId}/allocations/${allocationId}`, {
@@ -206,6 +206,21 @@ class GoalService {
 
     const data = await response.json()
     return data.allocation
+  }
+
+  async allocateTransaction(goalId: string, transactionId: string, amount: number): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/${goalId}/allocations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ transactionId, allocatedAmount: amount }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to allocate transaction')
+    }
   }
 }
 

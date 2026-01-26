@@ -9,7 +9,7 @@ import { ensureUserProfile } from '@/lib/utils/user'
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -29,26 +29,11 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    // Apply filters
-    if (completed !== null) {
-      const isCompleted = completed === 'true'
-      if (isCompleted) {
-        query = query.gte('current_amount', supabase.rpc('target_amount'))
-      } else {
-        query = query.lt('current_amount', supabase.rpc('target_amount'))
-      }
-    }
-
-    if (hasDeadline !== null) {
-      const hasDeadlineFilter = hasDeadline === 'true'
-      if (hasDeadlineFilter) {
-        query = query.not('deadline', 'is', null)
-      } else {
-        query = query.is('deadline', null)
-      }
-    }
-
-    if (limit) {
+    // Apply limit if no post-processing filters are needed AND we are not filtering by completion
+    // But since we need to calculate progress to know if it's completed (if relying on real-time allocs),
+    // and we update current_amount here, it's safer to fetch more and filter in memory.
+    // Use a reasonable upper limit for initial fetch to avoid pulling too much if not necessary.
+    if (limit && completed === null) {
       query = query.limit(parseInt(limit))
     }
 
@@ -56,11 +41,11 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching goals:', error)
-      return NextResponse.json({ error: 'Failed to fetch goals' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to Fetch goals' }, { status: 500 })
     }
 
     // Calculate progress for each goal
-    const goalsWithProgress: GoalWithProgress[] = await Promise.all(
+    let goalsWithProgress: GoalWithProgress[] = await Promise.all(
       goals.map(async (goal) => {
         // Get allocated transactions for this goal
         const { data: allocations, error: allocError } = await supabase
@@ -78,10 +63,13 @@ export async function GET(request: NextRequest) {
         const remainingAmount = Math.max(goal.target_amount - currentAmount, 0)
 
         // Update current_amount in database
-        await supabase
-          .from('goals')
-          .update({ current_amount: currentAmount })
-          .eq('id', goal.id)
+        // Note: Doing this on every GET might be heavy, but ensures consistency.
+        if (goal.current_amount !== currentAmount) {
+          await supabase
+            .from('goals')
+            .update({ current_amount: currentAmount })
+            .eq('id', goal.id)
+        }
 
         return {
           id: goal.id,
@@ -98,6 +86,31 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    // Apply completion filter in memory
+    if (completed !== null) {
+      const isCompleted = completed === 'true'
+      if (isCompleted) {
+        goalsWithProgress = goalsWithProgress.filter(g => g.currentAmount >= g.targetAmount)
+      } else {
+        goalsWithProgress = goalsWithProgress.filter(g => g.currentAmount < g.targetAmount)
+      }
+    }
+
+    // Apply deadline filter in memory
+    if (hasDeadline !== null) {
+      const hasDeadlineFilter = hasDeadline === 'true'
+      if (hasDeadlineFilter) {
+        goalsWithProgress = goalsWithProgress.filter(g => g.deadline !== undefined)
+      } else {
+        goalsWithProgress = goalsWithProgress.filter(g => g.deadline === undefined)
+      }
+    }
+
+    // Apply limit in memory if not applied in query
+    if (limit && (completed !== null || hasDeadline !== null)) {
+      goalsWithProgress = goalsWithProgress.slice(0, parseInt(limit))
+    }
+
     return NextResponse.json({ goals: goalsWithProgress })
   } catch (error) {
     console.error('Unexpected error:', error)
@@ -109,7 +122,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -126,22 +139,22 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json()
-    
+
     // Validate the goal data
     const validation = validateGoalData(body)
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
-          error: 'Validation failed', 
-          details: validation.errors 
-        }, 
+        {
+          error: 'Validation failed',
+          details: validation.errors
+        },
         { status: 400 }
       )
     }
 
     // Sanitize the data
     const sanitizedData = sanitizeGoalData(body)
-    
+
     // Prepare goal data
     const goalData: GoalInsert = {
       user_id: user.id,

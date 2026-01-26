@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -90,7 +90,7 @@ export async function POST(
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -117,15 +117,16 @@ export async function POST(
 
     // Parse and validate request body
     const body = await request.json()
-    
+
     // Validate the allocation data
     const validation = validateTransactionAllocationData(body)
     if (!validation.isValid) {
+      console.error('Allocation validation failed:', validation.errors)
       return NextResponse.json(
-        { 
-          error: 'Validation failed', 
-          details: validation.errors 
-        }, 
+        {
+          error: 'Validation failed',
+          details: validation.errors
+        },
         { status: 400 }
       )
     }
@@ -152,7 +153,7 @@ export async function POST(
     // Validate that allocated amount doesn't exceed transaction amount
     if (sanitizedData.allocatedAmount > transaction.amount) {
       return NextResponse.json(
-        { error: 'Allocated amount cannot exceed transaction amount' }, 
+        { error: 'Allocated amount cannot exceed transaction amount' },
         { status: 400 }
       )
     }
@@ -172,7 +173,7 @@ export async function POST(
 
     if (existingAllocation) {
       return NextResponse.json(
-        { error: 'Transaction is already allocated to this goal' }, 
+        { error: 'Transaction is already allocated to this goal' },
         { status: 400 }
       )
     }
@@ -193,9 +194,9 @@ export async function POST(
 
     if (sanitizedData.allocatedAmount > remainingAmount) {
       return NextResponse.json(
-        { 
-          error: `Only ${remainingAmount} remaining from this transaction. Already allocated: ${totalAllocated}` 
-        }, 
+        {
+          error: `Only ${remainingAmount} remaining from this transaction. Already allocated: ${totalAllocated}`
+        },
         { status: 400 }
       )
     }
