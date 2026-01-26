@@ -80,9 +80,19 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json()
 
+    // Pre-processing for legacy offline data or goal transactions:
+    // If category is missing or empty, assign the hardcoded Goal Category ID
+    // This allows syncing of transactions created when we allowed empty categories for goals.
+    const GOAL_CATEGORY_ID = '22d2169c-9213-4d69-9cc9-4f5393846553';
+
+    if (!body.category || body.category.trim() === '' || body.category === 'goal-allocation') {
+      body.category = GOAL_CATEGORY_ID;
+    }
+
     // Validate the transaction data
     const validation = validateTransactionData(body)
     if (!validation.isValid) {
+      console.error('Transactions API: Validation failed', validation.errors, 'Body:', body)
       return NextResponse.json(
         {
           error: 'Validation failed',
@@ -100,7 +110,6 @@ export async function POST(request: NextRequest) {
     // If the category doesn't exist in the DB, the FK constraint will fail, which is expected/safe.
 
     let finalCategoryId = sanitizedData.category
-    const GOAL_CATEGORY_ID = '22d2169c-9213-4d69-9cc9-4f5393846553';
 
     // If somehow we still get 'goal-allocation', map it to the hardcoded ID just in case
     if (sanitizedData.category === 'goal-allocation') {

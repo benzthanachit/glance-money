@@ -1,4 +1,5 @@
 # Use the official Node.js 20 image as base
+# Works on Linux and Windows (via WSL2)
 FROM node:20-alpine AS base
 
 # Install dependencies only when needed
@@ -20,12 +21,13 @@ COPY . .
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG SUPABASE_SERVICE_ROLE_KEY
 
 # Set environment variables for build
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+# Note: SUPABASE_SERVICE_ROLE_KEY is NOT baked into the image for security.
+# It must be provided as an environment variable at runtime in Cloud Run.
+
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application

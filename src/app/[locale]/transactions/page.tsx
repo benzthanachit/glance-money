@@ -25,6 +25,7 @@ export default function TransactionsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('transactions')
   const [showTransactionForm, setShowTransactionForm] = useState(false)
   const [isRecurringMode, setIsRecurringMode] = useState(false)
+  const [recurringRefreshTrigger, setRecurringRefreshTrigger] = useState(0)
 
   // Transaction List State
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -139,6 +140,8 @@ export default function TransactionsPage() {
       setEditingTransaction(undefined)
       setFormMode('create')
       fetchTransactions()
+      // Trigger recurring transactions refresh
+      setRecurringRefreshTrigger(prev => prev + 1)
     } catch (error) {
       console.error('Error saving transaction:', error)
       toast.error('Failed to save transaction')
@@ -224,7 +227,10 @@ export default function TransactionsPage() {
         )}
 
         {activeTab === 'recurring' && (
-          <RecurringTransactionManager onCreateNew={handleCreateRecurring} />
+          <RecurringTransactionManager
+            onCreateNew={handleCreateRecurring}
+            refreshTrigger={recurringRefreshTrigger}
+          />
         )}
 
         {/* Transaction Form Dialog */}

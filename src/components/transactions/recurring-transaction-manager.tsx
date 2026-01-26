@@ -8,13 +8,13 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { CurrencyFormatter } from '@/components/ui/currency-formatter'
 import { DateFormatter } from '@/components/ui/date-formatter'
-import { 
-  Play, 
-  Pause, 
-  Edit, 
-  Trash2, 
-  Calendar, 
-  RefreshCw, 
+import {
+  Play,
+  Pause,
+  Edit,
+  Trash2,
+  Calendar,
+  RefreshCw,
   Plus,
   Eye,
   AlertTriangle
@@ -29,9 +29,10 @@ interface RecurringTransactionWithStatus extends Transaction {
 
 interface RecurringTransactionManagerProps {
   onCreateNew?: () => void
+  refreshTrigger?: number
 }
 
-export function RecurringTransactionManager({ onCreateNew }: RecurringTransactionManagerProps) {
+export function RecurringTransactionManager({ onCreateNew, refreshTrigger = 0 }: RecurringTransactionManagerProps) {
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransactionWithStatus[]>([])
   const [selectedTransaction, setSelectedTransaction] = useState<RecurringTransactionWithStatus | null>(null)
   const [instances, setInstances] = useState<Transaction[]>([])
@@ -43,7 +44,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
   useEffect(() => {
     setMounted(true)
     loadRecurringTransactions()
-  }, [])
+  }, [refreshTrigger])
 
   const loadRecurringTransactions = async () => {
     try {
@@ -82,11 +83,11 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
       const response = await fetch(`/api/transactions/recurring/${transactionId}/toggle`, {
         method: 'POST',
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to toggle recurring transaction')
       }
-      
+
       const data = await response.json()
       toast.success(data.message)
       await loadRecurringTransactions()
@@ -102,16 +103,16 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
     try {
       setActionLoading(transactionId)
       const response = await fetch(
-        `/api/transactions/recurring/${transactionId}?deleteInstances=${deleteInstances}`, 
+        `/api/transactions/recurring/${transactionId}?deleteInstances=${deleteInstances}`,
         {
           method: 'DELETE',
         }
       )
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete recurring transaction')
       }
-      
+
       toast.success('Recurring transaction deleted successfully')
       await loadRecurringTransactions()
     } catch (error) {
@@ -128,11 +129,11 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
       const response = await fetch('/api/transactions/recurring', {
         method: 'POST',
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to generate recurring transactions')
       }
-      
+
       const data = await response.json()
       toast.success(data.message)
     } catch (error) {
@@ -246,14 +247,13 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Amount</span>
-                  <div className={`font-semibold ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <div className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
                     {transaction.type === 'income' ? '+' : '-'}
                     <CurrencyFormatter amount={transaction.amount} />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Next Due</span>
                   <DateFormatter date={new Date(transaction.nextDueDate)} />
@@ -272,7 +272,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
                       <Play className="h-3 w-3" />
                     )}
                   </Button>
-                  
+
                   <Button
                     size="sm"
                     variant="outline"
@@ -280,7 +280,7 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
                   >
                     <Eye className="h-3 w-3" />
                   </Button>
-                  
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline">
@@ -348,9 +348,8 @@ export function RecurringTransactionManager({ onCreateNew }: RecurringTransactio
                       <p className="text-sm text-muted-foreground">{instance.description}</p>
                     )}
                   </div>
-                  <div className={`font-semibold ${
-                    instance.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <div className={`font-semibold ${instance.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
                     {instance.type === 'income' ? '+' : '-'}
                     <CurrencyFormatter amount={instance.amount} />
                   </div>
