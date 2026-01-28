@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { TOUCH_TARGET_MIN_HEIGHT } from '@/lib/constants';
-import { 
-  Home, 
-  CreditCard, 
-  Target, 
-  Settings 
+import {
+  Home,
+  CreditCard,
+  Target,
+  Settings,
+  CalendarRange
 } from 'lucide-react';
 
 export interface BottomNavigationProps {
-  currentPage: 'home' | 'transactions' | 'goals' | 'settings';
+  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings';
 }
 
 const navigationItems = [
@@ -35,6 +36,12 @@ const navigationItems = [
     icon: Target,
   },
   {
+    id: 'subscriptions' as const,
+    label: 'Subs',
+    href: '/subscriptions',
+    icon: CalendarRange,
+  },
+  {
     id: 'settings' as const,
     label: 'Settings',
     href: '/settings',
@@ -51,7 +58,7 @@ export function BottomNavigation({ currentPage }: BottomNavigationProps) {
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id || pathname === item.href;
-          
+
           return (
             <Link
               key={item.id}
@@ -67,11 +74,11 @@ export function BottomNavigation({ currentPage }: BottomNavigationProps) {
               )}
               style={{ minHeight: `${TOUCH_TARGET_MIN_HEIGHT}px` }}
             >
-              <Icon 
+              <Icon
                 className={cn(
                   'h-5 w-5',
                   isActive ? 'text-primary' : 'text-muted-foreground'
-                )} 
+                )}
               />
               <span className={cn(
                 'font-medium',

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 export interface ResponsiveLayoutProps {
   children: React.ReactNode;
-  currentPage: 'home' | 'transactions' | 'goals' | 'settings';
+  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings';
   onAddTransaction?: () => void;
   showFAB?: boolean;
 }

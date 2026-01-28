@@ -19,3 +19,4 @@ export { LazyWrapper, ViewportLazy, withLazyLoading, useIntersectionObserver } f
 export { OptimizedImage, ImagePresets } from './optimized-image';
 
 export type { FloatingActionButtonProps } from './floating-action-button';
+export { Switch } from './switch';

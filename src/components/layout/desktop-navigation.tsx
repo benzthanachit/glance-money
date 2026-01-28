@@ -5,17 +5,18 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/context';
 import { Button } from '@/components/ui/button';
-import { 
-  Home, 
-  CreditCard, 
-  Target, 
+import {
+  Home,
+  CreditCard,
+  Target,
   Settings,
   LogOut,
-  Wallet
+  Wallet,
+  CalendarRange
 } from 'lucide-react';
 
 export interface DesktopNavigationProps {
-  currentPage: 'home' | 'transactions' | 'goals' | 'settings';
+  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings';
 }
 
 const navigationItems = [
@@ -36,6 +37,12 @@ const navigationItems = [
     label: 'Goals',
     href: '/goals',
     icon: Target,
+  },
+  {
+    id: 'subscriptions' as const,
+    label: 'Subs',
+    href: '/subscriptions',
+    icon: CalendarRange,
   },
   {
     id: 'settings' as const,
@@ -66,7 +73,7 @@ export function DesktopNavigation({ currentPage }: DesktopNavigationProps) {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id || pathname === item.href;
-            
+
             return (
               <Link
                 key={item.id}
