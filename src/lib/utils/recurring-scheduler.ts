@@ -71,7 +71,7 @@ export class RecurringScheduler {
     const currentDate = new Date()
     const currentMonth = currentDate.getMonth()
     const currentYear = currentDate.getFullYear()
-    
+
     // Get all active recurring transaction templates for the user
     const { data: templates, error: templatesError } = await this.supabase
       .from('transactions')
@@ -99,10 +99,15 @@ export class RecurringScheduler {
 
       // Check if we already generated a transaction for this month
       const shouldGenerate = await this.shouldGenerateForMonth(template.id, userId, currentYear, currentMonth)
-      
+
       if (shouldGenerate) {
         try {
-          await this.generateRecurringInstance(template, currentDate)
+          // Calculate the target date based on template's day of month
+          const templateDate = new Date(template.date)
+          const dayOfMonth = templateDate.getDate()
+          const targetDate = this.getDateForMonth(currentYear, currentMonth, dayOfMonth)
+
+          await this.generateRecurringInstance(template, targetDate)
           generatedCount++
         } catch (error) {
           console.error(`Failed to generate instance for template ${template.id}:`, error)
@@ -115,12 +120,22 @@ export class RecurringScheduler {
   }
 
   /**
+   * Helper to get a valid date for a specific month/year given a day preference
+   */
+  private getDateForMonth(year: number, month: number, day: number): Date {
+    // Get the last day of the target month
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
+    const validDay = Math.min(day, lastDayOfMonth)
+    return new Date(year, month, validDay)
+  }
+
+  /**
    * Check if a recurring transaction needs to be generated for a specific month
    */
   private async shouldGenerateForMonth(
-    templateId: string, 
-    userId: string, 
-    year: number, 
+    templateId: string,
+    userId: string,
+    year: number,
     month: number
   ): Promise<boolean> {
     // Check if there's already a transaction for this month

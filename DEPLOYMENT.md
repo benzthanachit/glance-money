@@ -113,19 +113,19 @@ Before you begin, ensure you have:
      --build-arg NEXT_PUBLIC_SUPABASE_URL="your_supabase_url" \
      --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="your_anon_key" \
      --build-arg SUPABASE_SERVICE_ROLE_KEY="your_service_key" \
-     -t gcr.io/your-project-id/glance-money .
+     -t asia-southeast1-docker.pkg.dev/ai-inventory-optimizer-sme/glance-money-repo/glance-money .
    ```
 
 2. **Push to Google Container Registry**:
    ```bash
-   docker push gcr.io/your-project-id/glance-money
+   docker push asia-southeast1-docker.pkg.dev/ai-inventory-optimizer-sme/glance-money-repo/glance-money
    ```
 
 3. **Deploy to Cloud Run**:
    ```bash
    gcloud run deploy glance-money \
-     --image gcr.io/your-project-id/glance-money \
-     --region us-central1 \
+     --image asia-southeast1-docker.pkg.dev/your-project-id/glance-money-repo/glance-money \
+     --region asia-southeast1 \
      --platform managed \
      --allow-unauthenticated \
      --port 3000 \

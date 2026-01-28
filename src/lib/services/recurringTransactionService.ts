@@ -36,7 +36,7 @@ class RecurringTransactionService {
    */
   async getRecurringTransactions(filters?: RecurringTransactionFilters): Promise<Transaction[]> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -101,7 +101,7 @@ class RecurringTransactionService {
    */
   async getRecurringTransactionInstances(parentId: string): Promise<Transaction[]> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -127,7 +127,7 @@ class RecurringTransactionService {
    */
   async generateMonthlyRecurringTransactions(): Promise<Transaction[]> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -135,19 +135,24 @@ class RecurringTransactionService {
 
     // Get all recurring transaction templates
     const recurringTemplates = await this.getRecurringTransactions({ isActive: true })
-    
+
     const currentDate = new Date()
     const currentMonth = currentDate.getMonth()
     const currentYear = currentDate.getFullYear()
-    
+
     // Check which templates need new instances for the current month
     const newTransactions: Transaction[] = []
-    
+
     for (const template of recurringTemplates) {
       const shouldGenerate = await this.shouldGenerateForMonth(template.id, currentYear, currentMonth)
-      
+
       if (shouldGenerate) {
-        const newTransaction = await this.generateRecurringInstance(template, currentDate)
+        // Calculate the target date based on template's day of month
+        const templateDate = new Date(template.date)
+        const dayOfMonth = templateDate.getDate()
+        const targetDate = this.getDateForMonth(currentYear, currentMonth, dayOfMonth)
+
+        const newTransaction = await this.generateRecurringInstance(template, targetDate)
         newTransactions.push(newTransaction)
       }
     }
@@ -160,7 +165,7 @@ class RecurringTransactionService {
    */
   async generateRecurringInstance(template: Transaction, targetDate: Date): Promise<Transaction> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -196,7 +201,7 @@ class RecurringTransactionService {
    */
   private async shouldGenerateForMonth(templateId: string, year: number, month: number): Promise<boolean> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -227,7 +232,7 @@ class RecurringTransactionService {
    */
   async updateRecurringTransaction(id: string, updateData: Partial<Transaction>): Promise<Transaction> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -271,7 +276,7 @@ class RecurringTransactionService {
    */
   async deleteRecurringTransaction(id: string, deleteInstances: boolean = false): Promise<void> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -318,7 +323,7 @@ class RecurringTransactionService {
    */
   async toggleRecurringTransaction(id: string): Promise<Transaction> {
     const supabase = this.getSupabaseClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       throw new Error('User not authenticated')
@@ -341,7 +346,7 @@ class RecurringTransactionService {
     // For now, we'll use the description field to store active/inactive state
     // In a real implementation, you might want to add an 'is_active' column
     const isCurrentlyActive = !transaction.description?.includes('[PAUSED]')
-    const newDescription = isCurrentlyActive 
+    const newDescription = isCurrentlyActive
       ? `${transaction.description || ''} [PAUSED]`.trim()
       : (transaction.description || '').replace('[PAUSED]', '').trim()
 
@@ -376,11 +381,37 @@ class RecurringTransactionService {
    */
   getNextDueDate(transaction: Transaction): Date {
     const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-    
-    // For monthly recurring transactions, the next due date is the first of next month
-    return new Date(currentYear, currentMonth + 1, 1)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    // Safety check for date
+    if (!transaction.date) {
+      const currentMonth = now.getMonth()
+      const currentYear = now.getFullYear()
+      return new Date(currentYear, currentMonth + 1, 1)
+    }
+
+    const templateDate = new Date(transaction.date)
+    const dayOfMonth = templateDate.getDate()
+
+    // Calculate date for current month
+    let nextDate = this.getDateForMonth(now.getFullYear(), now.getMonth(), dayOfMonth)
+
+    // If the date has already passed for this month, next due is next month
+    if (today > nextDate) {
+      nextDate = this.getDateForMonth(now.getFullYear(), now.getMonth() + 1, dayOfMonth)
+    }
+
+    return nextDate
+  }
+
+  /**
+   * Helper to get a valid date for a specific month/year given a day preference
+   */
+  private getDateForMonth(year: number, month: number, day: number): Date {
+    // Get the last day of the target month
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
+    const validDay = Math.min(day, lastDayOfMonth)
+    return new Date(year, month, validDay)
   }
 }
 
