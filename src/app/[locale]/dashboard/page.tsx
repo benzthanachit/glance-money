@@ -24,9 +24,9 @@ export default function DashboardPage() {
   const { isMobile } = useResponsive()
   const { netStatus, totalIncome, totalExpenses, theme, loading, isTransitioning } = useNetStatusTheme()
   const { categoryBreakdown, loading: summaryLoading } = useFinancialSummary()
-  const { isConnected, error: realtimeError } = useRealtimeUpdates({ 
+  const { isConnected, error: realtimeError } = useRealtimeUpdates({
     userId: user?.id,
-    enableOptimisticUpdates: true 
+    enableOptimisticUpdates: true
   })
   const t = useTranslations('dashboard')
   const [fabClickCount, setFabClickCount] = useState(0)
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         console.error('Failed to load categories:', error)
       }
     }
-    
+
     if (user) {
       loadCategories()
     }
@@ -77,84 +77,84 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <ResponsiveLayout 
-        currentPage="home" 
+      <ResponsiveLayout
+        currentPage="home"
         onAddTransaction={handleAddTransaction}
       >
-      {/* Header Section */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-start md:space-y-0">
-          <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('title')}</h1>
-              <ConnectionIndicator />
+        {/* Header Section */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-start md:space-y-0">
+            <div>
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('title')}</h1>
+                <ConnectionIndicator />
+              </div>
+              <p className="text-sm md:text-base text-muted-foreground">Welcome back, {user?.email}</p>
+              {realtimeError && (
+                <p className="text-xs text-red-600 mt-1">
+                  Real-time updates unavailable: {realtimeError}
+                </p>
+              )}
+              {/* Mobile offline indicator */}
+              <div className="mt-2 md:hidden">
+                <OfflineIndicator />
+              </div>
             </div>
-            <p className="text-sm md:text-base text-muted-foreground">Welcome back, {user?.email}</p>
-            {realtimeError && (
-              <p className="text-xs text-red-600 mt-1">
-                Real-time updates unavailable: {realtimeError}
-              </p>
-            )}
-            {/* Mobile offline indicator */}
-            <div className="mt-2 md:hidden">
-              <OfflineIndicator />
-            </div>
-          </div>
-          <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-4">
-            {/* Desktop offline indicator */}
-            <div className="hidden md:block">
-              <OfflineIndicator />
-            </div>
-            <div className="w-full md:w-48">
-              <LanguageSwitcher />
+            <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-4">
+              {/* Desktop offline indicator */}
+              <div className="hidden md:block">
+                <OfflineIndicator />
+              </div>
+              <div className="w-full md:w-48">
+                <LanguageSwitcher />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile-First Responsive Dashboard Layout */}
-      <div className="space-y-6 md:space-y-8">
-        {/* Net Status Card - Critical component, always loaded immediately */}
-        <div className="w-full">
-          <NetStatusCard
-            netAmount={netStatus}
-            currency="THB"
-            locale={locale}
-            theme={theme}
-            totalIncome={totalIncome}
-            totalExpenses={totalExpenses}
-            loading={loading}
-          />
-        </div>
-
-        {/* Desktop Grid Layout - Side by side positioning with lazy loading */}
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-          {/* Summary Cards - Lazy loaded for better performance */}
-          <div className="lg:col-span-2">
-            <LazySummaryCards
-              totalIncome={totalIncome}
-              totalExpenses={totalExpenses}
-              categoryBreakdown={categoryBreakdown}
+        {/* Mobile-First Responsive Dashboard Layout */}
+        <div className="space-y-6 md:space-y-8">
+          {/* Net Status Card - Critical component, always loaded immediately */}
+          <div className="w-full">
+            <NetStatusCard
+              netAmount={netStatus}
               currency="THB"
               locale={locale}
-              loading={summaryLoading}
-            />
-          </div>
-
-          {/* Chart Component - Lazy loaded as it's non-critical */}
-          <div className="lg:col-span-1">
-            <LazyExpenseChart
-              categoryBreakdown={categoryBreakdown}
+              theme={theme}
+              totalIncome={totalIncome}
               totalExpenses={totalExpenses}
-              locale={locale}
-              loading={summaryLoading}
+              loading={loading}
             />
           </div>
-        </div>
 
-        {/* Demo section - Touch-friendly on mobile */}
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-          <div className="p-4 md:p-6 rounded-lg bg-muted/50 touch-manipulation">
+          {/* Desktop Grid Layout - Side by side positioning with lazy loading */}
+          <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+            {/* Summary Cards - Lazy loaded for better performance */}
+            <div className="lg:col-span-2">
+              <LazySummaryCards
+                totalIncome={totalIncome}
+                totalExpenses={totalExpenses}
+                categoryBreakdown={categoryBreakdown}
+                currency="THB"
+                locale={locale}
+                loading={summaryLoading}
+              />
+            </div>
+
+            {/* Chart Component - Lazy loaded as it's non-critical */}
+            <div className="lg:col-span-1">
+              <LazyExpenseChart
+                categoryBreakdown={categoryBreakdown}
+                totalExpenses={totalExpenses}
+                locale={locale}
+                loading={summaryLoading}
+              />
+            </div>
+          </div>
+
+          {/* Demo section - Touch-friendly on mobile */}
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+            {/* <div className="p-4 md:p-6 rounded-lg bg-muted/50 touch-manipulation">
             <h3 className="text-lg font-semibold mb-2">FAB Demo</h3>
             <p className="text-sm text-muted-foreground mb-3">
               Click the floating action button (+ icon) to test functionality.
@@ -162,33 +162,33 @@ export default function DashboardPage() {
             <p className="text-xl font-bold">
               FAB clicked: {fabClickCount} times
             </p>
-          </div>
+          </div> */}
 
-          <div className="p-4 md:p-6 rounded-lg bg-muted/50 touch-manipulation">
-            <h3 className="text-lg font-semibold mb-2">Real-time Status</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Connection: <span className={`font-semibold ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isTransitioning ? 'Theme is transitioning...' : 'Theme is stable'}
-            </p>
-            <div className="mt-3 text-xs text-muted-foreground">
-              Real-time updates are {isConnected ? 'active' : 'inactive'}
-              <br />• Transaction changes sync automatically
-              <br />• Financial calculations update in real-time
-              {process.env.NODE_ENV === 'development' && (
-                <>
-                  <br />• Viewport: {isMobile ? 'Mobile' : 'Desktop'}
-                  <br />• Lazy loading: {isMobile ? 'Enabled' : 'Selective'}
-                </>
-              )}
+            <div className="p-4 md:p-6 rounded-lg bg-muted/50 touch-manipulation">
+              <h3 className="text-lg font-semibold mb-2">Real-time Status</h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Connection: <span className={`font-semibold ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isTransitioning ? 'Theme is transitioning...' : 'Theme is stable'}
+              </p>
+              <div className="mt-3 text-xs text-muted-foreground">
+                Real-time updates are {isConnected ? 'active' : 'inactive'}
+                <br />• Transaction changes sync automatically
+                <br />• Financial calculations update in real-time
+                {process.env.NODE_ENV === 'development' && (
+                  <>
+                    <br />• Viewport: {isMobile ? 'Mobile' : 'Desktop'}
+                    <br />• Lazy loading: {isMobile ? 'Enabled' : 'Selective'}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </ResponsiveLayout>
+      </ResponsiveLayout>
     </ProtectedRoute>
   )
 }

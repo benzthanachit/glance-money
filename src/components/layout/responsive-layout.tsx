@@ -13,11 +13,11 @@ export interface ResponsiveLayoutProps {
   showFAB?: boolean;
 }
 
-export function ResponsiveLayout({ 
-  children, 
-  currentPage, 
+export function ResponsiveLayout({
+  children,
+  currentPage,
   onAddTransaction,
-  showFAB = true 
+  showFAB = false
 }: ResponsiveLayoutProps) {
   const { isMobile } = useResponsive();
 

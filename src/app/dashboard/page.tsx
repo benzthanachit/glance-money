@@ -16,8 +16,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <ResponsiveLayout 
-      currentPage="home" 
+    <ResponsiveLayout
+      currentPage="home"
       onAddTransaction={handleAddTransaction}
     >
       <div className="mb-8">
@@ -58,7 +58,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Demo section to show FAB functionality */}
-      <div className="mt-8 text-center">
+      {/* <div className="mt-8 text-center">
         <Card className="mx-auto max-w-md">
           <CardHeader>
             <CardTitle>FAB Demo</CardTitle>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       <div className="mt-8 text-center">
         <p className="text-muted-foreground">
