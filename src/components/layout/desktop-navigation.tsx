@@ -12,11 +12,12 @@ import {
   Settings,
   LogOut,
   Wallet,
-  CalendarRange
+  CalendarRange,
+  TrendingUp
 } from 'lucide-react';
 
 export interface DesktopNavigationProps {
-  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings';
+  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings' | 'cashflow';
 }
 
 const navigationItems = [
@@ -31,6 +32,12 @@ const navigationItems = [
     label: 'Transactions',
     href: '/transactions',
     icon: CreditCard,
+  },
+  {
+    id: 'cashflow' as const,
+    label: 'Cashflow',
+    href: '/cashflow',
+    icon: TrendingUp,
   },
   {
     id: 'goals' as const,

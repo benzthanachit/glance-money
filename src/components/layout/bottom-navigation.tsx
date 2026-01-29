@@ -9,11 +9,12 @@ import {
   CreditCard,
   Target,
   Settings,
-  CalendarRange
+  CalendarRange,
+  TrendingUp
 } from 'lucide-react';
 
 export interface BottomNavigationProps {
-  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings';
+  currentPage: 'home' | 'transactions' | 'goals' | 'subscriptions' | 'settings' | 'cashflow';
 }
 
 const navigationItems = [
@@ -25,9 +26,15 @@ const navigationItems = [
   },
   {
     id: 'transactions' as const,
-    label: 'Transactions',
+    label: 'Trans.',
     href: '/transactions',
     icon: CreditCard,
+  },
+  {
+    id: 'cashflow' as const,
+    label: 'Cashflow',
+    href: '/cashflow',
+    icon: TrendingUp,
   },
   {
     id: 'goals' as const,
